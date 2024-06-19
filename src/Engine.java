@@ -44,7 +44,7 @@ public class Engine {
                 pvTable = new long[maxDepth][maxDepth];
 
                 endTime = System.currentTimeMillis();
-                //System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
+//                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
             } else {
                 break;
             }

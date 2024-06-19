@@ -492,6 +492,117 @@ public class Board implements Serializable {
         pieceCount = fPCount + fNCount + fRCount + fBCount + fQCount + ePCount + eNCount + eRCount + eBCount + eQCount + 2;
     }
 
+    private void initNNUEArrays() { //currently unsure about how to efficiently update these when making a move
+        /*int pieceTypeShift;
+        int currentPieceSquare;
+        pieces = new int[32];
+        squares = new int[32];
+        pieceCount = 0;
+
+        if (player) {
+            pieceTypeShift = 0;
+        } else {
+            pieceTypeShift = 8;
+        }
+
+        pieces[pieceCount] = 6+pieceTypeShift;
+        squares[pieceCount] = shiftSquares[BitMethods.getLS1B(fKing)];
+        pieceCount++;
+        pieces[pieceCount] = 14-pieceTypeShift;
+        squares[pieceCount] = shiftSquares[BitMethods.getLS1B(eKing)];
+        pieceCount++;
+
+        long temp = fQueen;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 5+pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = eQueen;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 13-pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = fRook;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 4+pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = eRook;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 12-pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = fBishop;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 3+pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = eBishop;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 11-pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = fKnight;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 2+pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = eKnight;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 10-pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = fPawn;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 1+pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }
+
+        temp = ePawn;
+        while (temp != 0) {
+            currentPieceSquare = BitMethods.getLS1B(temp);
+            temp &= ~(1L << currentPieceSquare);
+            pieces[pieceCount] = 9-pieceTypeShift;
+            squares[pieceCount] = shiftSquares[currentPieceSquare];
+            pieceCount++;
+        }*/
+    }
+
     /*private String getMoves() {
         String output = "";
         for (int i = 0; i < moveLog.length; i++) {

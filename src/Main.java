@@ -1,27 +1,31 @@
 import java.util.Scanner;
 
 public class Main {
+    static String bigNet = "nn-b1a57edbea57.nnue";
+    static String smallNet = "nn-baff1ede1f90.nnue";
     static boolean flip = false;
-    static boolean player = true;
-    static boolean tablebase = true;    
+    static boolean player = flip;
+    static boolean tablebase = false;
+    static boolean nnue = true;
 
     public static void main(String[] args) {
         init();
-        //Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
-        //Board board = new Board(PosConstants.startPos);
-        //SearchNode node = Engine.getSearchNodes(board, 4);
-        //node.flag = SearchNode.StartNode;
-        //TreeGUI.displayTree(node);
 
+//        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
 //        Board board = new Board(PosConstants.startPos);
-//        Gui gui = new Gui(board, 1.2, flip);
+//        SearchNode node = Engine.getSearchNodes(board, 4);
+//        node.flag = SearchNode.StartNode;
+//        TreeGUI.displayTree(node);
+
+        Board board = new Board(PosConstants.startPos);
+        Gui gui = new Gui(board, 1.2, flip);
+        play(board, gui, 1000, player);
+
 //        engineTest(board, gui, 200);
 //        Engine.engineMove(6, board);
-//        play(board, gui, 1000, player);
         
-        Client client = new Client(1409);
-        client.initMatch();
-//        Tablebase.getEval(new Board("8/p7/1p1R4/8/2P5/1k6/8/7K b - - 0 52"));
+//        Client client = new Client(1409);
+//        client.initMatch();
     }
 
     static void play(Board board, Gui gui, int timeLimit, boolean player) {
@@ -91,6 +95,7 @@ public class Main {
     }
 
     static void init() {
+        NNUEBridge.init(bigNet, smallNet);
         MoveGeneration.initAttack();
         Zobrist.initKeys();
     }

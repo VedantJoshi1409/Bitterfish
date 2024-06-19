@@ -10,7 +10,7 @@ public class Client {
         try {
             socket = new Socket("localhost", port);
             oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject("V8");
+            oos.writeObject("V9.1");
 
             ois = new ObjectInputStream(socket.getInputStream());
             ZobristPackage zobristPackage = (ZobristPackage) ois.readObject();

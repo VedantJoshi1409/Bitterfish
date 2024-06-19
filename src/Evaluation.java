@@ -234,7 +234,137 @@ public class Evaluation {
             -12, 17, 14, 17, 17, 38, 23, 11,
             -74, -35, -18, -18, -11, 15, 4, -17,}};
 
+    static int[] shiftSquares = {
+            56, 57, 58, 59, 60, 61, 62, 63,
+            48, 49, 50, 51, 52, 53, 54, 55,
+            40, 41, 42, 43, 44, 45, 46, 47,
+            32, 33, 34, 35, 36, 37, 38, 39,
+            24, 25, 26, 27, 28, 29, 30, 31,
+            16, 17, 18, 19, 20, 21, 22, 23,
+            8, 9, 10, 11, 12, 13, 14, 15,
+            0, 1, 2, 3, 4, 5, 6, 7};
+
+    public static int nnueEval(Board board) {
+        int side;
+        int pieceTypeShift;
+        int currentPieceSquare;
+        int[] pieces = new int[32];
+        int[] squares = new int[32];
+        int pieceAmount = 0;
+
+        if (board.player) {
+            side = 0;
+            pieceTypeShift = 0;
+        } else {
+            side = 1;
+            pieceTypeShift = 8;
+        }
+
+        pieces[pieceAmount] = 6+pieceTypeShift;
+        squares[pieceAmount] = shiftSquares[BitMethods.getLS1B(board.fKing)];
+        pieceAmount++;
+        pieces[pieceAmount] = 14-pieceTypeShift;
+        squares[pieceAmount] = shiftSquares[BitMethods.getLS1B(board.eKing)];
+        pieceAmount++;
+
+        long fQueen = board.fQueen;
+        while (fQueen != 0) {
+            currentPieceSquare = BitMethods.getLS1B(fQueen);
+            fQueen &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 5+pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long eQueen = board.eQueen;
+        while (eQueen != 0) {
+            currentPieceSquare = BitMethods.getLS1B(eQueen);
+            eQueen &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 13-pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long fRook = board.fRook;
+        while (fRook != 0) {
+            currentPieceSquare = BitMethods.getLS1B(fRook);
+            fRook &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 4+pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long eRook = board.eRook;
+        while (eRook != 0) {
+            currentPieceSquare = BitMethods.getLS1B(eRook);
+            eRook &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 12-pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long fBishop = board.fBishop;
+        while (fBishop != 0) {
+            currentPieceSquare = BitMethods.getLS1B(fBishop);
+            fBishop &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 3+pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long eBishop = board.eBishop;
+        while (eBishop != 0) {
+            currentPieceSquare = BitMethods.getLS1B(eBishop);
+            eBishop &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 11-pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long fKnight = board.fKnight;
+        while (fKnight != 0) {
+            currentPieceSquare = BitMethods.getLS1B(fKnight);
+            fKnight &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 2+pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long eKnight = board.eKnight;
+        while (eKnight != 0) {
+            currentPieceSquare = BitMethods.getLS1B(eKnight);
+            eKnight &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 10-pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long fPawn = board.fPawn;
+        while (fPawn != 0) {
+            currentPieceSquare = BitMethods.getLS1B(fPawn);
+            fPawn &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 1+pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        long ePawn = board.ePawn;
+        while (ePawn != 0) {
+            currentPieceSquare = BitMethods.getLS1B(ePawn);
+            ePawn &= ~(1L << currentPieceSquare);
+            pieces[pieceAmount] = 9-pieceTypeShift;
+            squares[pieceAmount] = shiftSquares[currentPieceSquare];
+            pieceAmount++;
+        }
+
+        return NNUEBridge.fasterEvalArray(pieces, squares, pieceAmount, side, board.halfMoveClock);
+    }
+
     public static double evaluation(Board board) {
+        if (Main.nnue) {
+            return nnueEval(board);
+        }
+
         int materialDiff;
         double positionalScore = 0;
         double mobilityScore = 0;
