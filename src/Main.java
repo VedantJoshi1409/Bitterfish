@@ -1,15 +1,18 @@
+import NNUEBridge.NNUEBridge;
+
 import java.util.Scanner;
 
 public class Main {
     static String bigNet = "nn-b1a57edbea57.nnue";
     static String smallNet = "nn-baff1ede1f90.nnue";
-    static boolean flip = false;
-    static boolean player = flip;
-    static boolean tablebase = false;
-    static boolean nnue = true;
+    static boolean flip;
+    static boolean player;
+    static boolean tablebase;
+    static boolean nnue;
+    static int timeLimit;
+    static boolean uci = false;
 
     public static void main(String[] args) {
-        init();
 
 //        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
 //        Board board = new Board(PosConstants.startPos);
@@ -17,9 +20,50 @@ public class Main {
 //        node.flag = SearchNode.StartNode;
 //        TreeGUI.displayTree(node);
 
-        Board board = new Board(PosConstants.startPos);
-        Gui gui = new Gui(board, 1.2, flip);
-        play(board, gui, 1000, player);
+        Scanner sc = new Scanner(System.in);
+        String lineIn = sc.nextLine();
+        boolean firstLoop = true;
+
+        while (true) {
+            if (lineIn.equals("uci")) {
+                uci = true;
+                nnue = true;
+                if (firstLoop) {
+                    init();
+                    firstLoop = false;
+                }
+                System.out.println("id name Bitterfish");
+                System.out.println("id author Vedant Joshi");
+                System.out.println("uciok");
+                UCI uci = new UCI();
+                uci.loop();
+            } else if (lineIn.equals("gui")) {
+                if (firstLoop) {
+                    init();
+                    firstLoop = false;
+                }
+
+                Menu menu = new Menu();
+                while (!menu.startGame) {
+                    try {
+                        Thread.sleep(100);
+                    } catch (InterruptedException e) {
+                    }
+                }
+                menu.dispose();
+                nnue = menu.nnueEnabled;
+                player = menu.player;
+                flip = menu.flip;
+                timeLimit = menu.thinkTimeAmount;
+
+
+                init();
+                Board board = new Board(PosConstants.startPos);
+                Gui gui = new Gui(board, menu.scale, flip);
+                play(board, gui, timeLimit, player);
+                gui.dispose();
+            }
+        }
 
 //        engineTest(board, gui, 200);
 //        Engine.engineMove(6, board);
@@ -95,7 +139,9 @@ public class Main {
     }
 
     static void init() {
-        NNUEBridge.init(bigNet, smallNet);
+        if (nnue) {
+            NNUEBridge.init(bigNet, smallNet);
+        }
         MoveGeneration.initAttack();
         Zobrist.initKeys();
     }

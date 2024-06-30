@@ -46,4 +46,12 @@ public class TTable {
             table.put(intKey, hashEntry);
         }
     }
+
+    static void clearTables() {
+        table.clear();
+    }
+
+    static double hashfull() {
+        return (double) table.size() /initialCapacity*1000;
+    }
 }

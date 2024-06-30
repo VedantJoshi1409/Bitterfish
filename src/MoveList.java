@@ -166,6 +166,17 @@ public class MoveList {
         return output;
     }
 
+    static String toStringPvUCI(long[][] pv) {
+        String output = "";
+        for (int i = 0; i < pv[0].length; i++) {
+            if (pv[0][i] == 0) {
+                break;
+            }
+            output += MoveList.toStringMove(pv[0][i]) + " ";
+        }
+        return output;
+    }
+
     static int getStartSquare(long move) {
         return (int) (move & startSquare);
     }
@@ -230,7 +241,19 @@ public class MoveList {
     }
 
     public static String toStringMove(long move) {
-        return BitMethods.moveToStringMove(getStartSquare(move)) + BitMethods.moveToStringMove(getEndSquare(move));
+        int promote = getPromotePiece(move);
+        if (promote == 0) {
+            return BitMethods.moveToStringMove(getStartSquare(move)) + BitMethods.moveToStringMove(getEndSquare(move));
+        } else {
+            char promotePiece = ' ';
+            switch (promote) {
+                case 1 -> promotePiece = 'r';
+                case 2 -> promotePiece = 'n';
+                case 3 -> promotePiece = 'b';
+                case 4 -> promotePiece = 'q';
+            }
+            return BitMethods.moveToStringMove(getStartSquare(move)) + BitMethods.moveToStringMove(getEndSquare(move)) + promotePiece;
+        }
     }
 
     public long getMoveFromString(String move) {

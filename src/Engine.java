@@ -6,14 +6,18 @@ public class Engine {
     static long[] pvLength = new long[maxDepth];
     static long[][] pvTable = new long[maxDepth][maxDepth];
     static long[][] previousPV = new long[maxDepth][maxDepth];
+    static double evaluation;
 
     static int totalDepth;
     static int nodes;
     static long thinkTime, startTime, endTime;
     static int timeOut = 123456789;
+    static boolean kill;
+
 
     public static Board engineMove(Board board, int timeLimit) {
         Board bestBoard = null, temp;
+        kill = false;
 
         startTime = System.currentTimeMillis();
         thinkTime = timeLimit;
@@ -27,7 +31,7 @@ public class Engine {
             }
         }*/
 
-        for (int i = 1; i < maxDepth; i++) { //arbitrary depth limit
+        for (int i = 1; i < maxDepth && !kill; i++) { //arbitrary depth limit
             if (i == 1) { //so first move can be made
                 thinkTime = Integer.MAX_VALUE;
             } else {
@@ -44,6 +48,9 @@ public class Engine {
                 pvTable = new long[maxDepth][maxDepth];
 
                 endTime = System.currentTimeMillis();
+                if (Main.uci) {
+                    System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime-startTime), MoveList.toStringPvUCI(previousPV), (int)evaluation, (int)TTable.hashfull());
+                }
 //                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
             } else {
                 break;
@@ -163,6 +170,7 @@ public class Engine {
         if (!alphaIsARepetition) {
             TTable.writeValue(board.zobristKey, depth, alpha, hashFlag);
         }
+        evaluation = alpha;
         return bestBoard;
     }
 

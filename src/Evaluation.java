@@ -1,3 +1,5 @@
+import NNUEBridge.NNUEBridge;
+
 public class Evaluation {
     static final int PawnValue = 100;
     static final int RookValue = 500;

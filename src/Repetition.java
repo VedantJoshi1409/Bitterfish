@@ -54,4 +54,9 @@ public class Repetition {
             return Objects.requireNonNullElse(positionHistory.get((int) (key % treeSize)), 0);
         }
     }
+
+    public static void clearTables() {
+        treeHistory.clear();
+        positionHistory.clear();
+    }
 }
