@@ -53,7 +53,10 @@ public class UCI {
         if (command.contains("moves")) {
             String[] moves = command.substring(command.indexOf("moves")).split(" ");
             Board nextBoard = board;
+
             Repetition.clearTables();
+            Repetition.addToHistory(board.zobristKey, Repetition.historyFlag);
+
             for (int i = 1; i < moves.length; i++) {
                 MoveList moveList = MoveGeneration.getMoves(nextBoard);
                 nextBoard = new Board(nextBoard);
@@ -63,7 +66,7 @@ public class UCI {
 
             board = nextBoard;
         }
-        System.out.println(board);
+//        System.out.println(board);
     }
 
     void go(String command) {
@@ -88,14 +91,58 @@ public class UCI {
         }
 
         Board temp = Engine.engineMove(board, movetime);
-        getBestMove(temp);
+        System.out.println(getBestMove(temp));
     }
 
-    void getBestMove(Board board) {
-        System.out.println("bestmove " + MoveList.toStringMove(board.pastMove));
+    String getBestMove(Board board) {
+        return ("bestmove " + MoveList.toStringMove(board.pastMove));
     }
 
     void stop() {
         Engine.kill = true;
+    }
+
+    String uciCommand(String command) {
+        switch (command.split(" ")[0]) {
+            case "isready":
+                return "readyok";
+            case "ucinewgame":
+                newGame();
+                break;
+            case "position":
+                position(command);
+                break;
+            case "go":
+                return goClient(command);
+            case "stop":
+                stop();
+                break;
+        }
+        return null;
+    }
+
+    String goClient(String command) {
+        String[] commands = command.split(" ");
+        int movetime = 1000;
+        boolean setTime = false;
+        String side;
+        if (board.player) {
+            side = "wtime";
+        } else {
+            side = "btime";
+        }
+
+        for (int i = 0; i < commands.length; i++) {
+            if (commands[i].equals("movetime")) {
+                movetime = Integer.parseInt(commands[i + 1]);
+                setTime = true;
+            }
+            if (!setTime && commands[i].equals(side)) {
+                movetime = Math.max(Integer.parseInt(commands[i + 1]) / 50, 250);
+            }
+        }
+
+        Board temp = Engine.engineMove(board, movetime);
+        return getBestMove(temp);
     }
 }

@@ -13,6 +13,8 @@ public class Main {
     static boolean uci = false;
 
     public static void main(String[] args) {
+//        nnue = true;
+//        init();
 
 //        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
 //        Board board = new Board(PosConstants.startPos);

@@ -2,7 +2,7 @@ import java.io.Serializable;
 
 import static java.lang.Character.isDigit;
 
-public class Board implements Serializable {
+public class Board {
     static final long wSKing = 4611686018427387904L, wLKing = 288230376151711744L;
     static final long wSRook = -6917529027641081856L, wLRook = 648518346341351424L;
     static final long bSKing = 64L, bLKing = 4L;

@@ -6,17 +6,20 @@ public class Client {
     ObjectOutputStream oos;
     ObjectInputStream ois;
 
+    UCI uci;
+    String previousPos;
+
     public Client(int port) {
         try {
             socket = new Socket("localhost", port);
             oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject("V9.1");
+            oos.writeObject("V11");
 
             ois = new ObjectInputStream(socket.getInputStream());
-            ZobristPackage zobristPackage = (ZobristPackage) ois.readObject();
-            zobristPackage.implementValues();
-            System.out.println("Zobrist Package Received!");
-
+            uci = new UCI();
+            uci.uciCommand((String) ois.readObject());
+            uci.uciCommand((String) ois.readObject());
+            uci.uciCommand((String) ois.readObject());
         } catch (IOException e) {
             e.printStackTrace();
         } catch (ClassNotFoundException e) {
@@ -25,33 +28,17 @@ public class Client {
     }
 
     public void initMatch() {
-        int thinkTime = -1;
-        Package dataPackage;
-        Board board;
-
-        try {
-            thinkTime = ois.readInt();
-            System.out.println("Think time: " + thinkTime);
-
-        } catch (IOException e) {
-            e.printStackTrace();
-        }
 
         try {
             while (true) {
-                dataPackage = (Package) ois.readObject();
-                Repetition.positionHistory = dataPackage.positionHistory;
-                board = dataPackage.board;
+                String command = (String) ois.readObject();
+                uci.uciCommand(command);
 
-                if (board.boardToFen().equals(PosConstants.startPos)) {
-                    TTable.table.clear();
+                if (!command.equals("ucinewgame")) {
+                    previousPos = command;
+                    String go = (String) ois.readObject();
+                    oos.writeObject(uci.goClient(go));
                 }
-
-                board = Engine.engineMove(board, thinkTime);
-                Repetition.addToHistory(board.zobristKey, Repetition.historyFlag);
-
-                dataPackage = new Package(board, Repetition.positionHistory);
-                oos.writeObject(dataPackage);
             }
         } catch (IOException e) {
             e.printStackTrace();
