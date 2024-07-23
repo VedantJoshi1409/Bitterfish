@@ -17,8 +17,10 @@ public class Main {
 //        init();
 
 //        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
-//        Board board = new Board(PosConstants.startPos);
-//        SearchNode node = Engine.getSearchNodes(board, 4);
+//        Board board = new Board("rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1");
+//        Engine.engineMove(board, 1000);
+//        board = new Board("r1bqkbnr/pppppppp/2n5/8/2PP4/8/PP2PPPP/RNBQKBNR b KQkq d3 0 2");
+//        SearchNode node = Engine.getSearchNodes(board, 3);
 //        node.flag = SearchNode.StartNode;
 //        TreeGUI.displayTree(node);
 
@@ -64,6 +66,8 @@ public class Main {
                 Gui gui = new Gui(board, menu.scale, flip);
                 play(board, gui, timeLimit, player);
                 gui.dispose();
+                Repetition.clearTables();
+                TTable.clearTables();
             }
         }
 

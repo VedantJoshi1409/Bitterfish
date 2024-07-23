@@ -7,6 +7,7 @@ public class Engine {
     static long[][] pvTable = new long[maxDepth][maxDepth];
     static long[][] previousPV = new long[maxDepth][maxDepth];
     static double evaluation;
+    static int evalWindow = 50;
 
     static int totalDepth;
     static int nodes;
@@ -49,7 +50,7 @@ public class Engine {
 
                 endTime = System.currentTimeMillis();
                 if (Main.uci) {
-                    System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime-startTime), MoveList.toStringPvUCI(previousPV), (int)evaluation, (int)TTable.hashfull());
+                    System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime - startTime), MoveList.toStringPvUCI(previousPV), (int) evaluation, (int) TTable.hashfull());
                 }
 //                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
             } else {
@@ -112,8 +113,17 @@ public class Engine {
             }
         }
 
-        double alpha = Double.NEGATIVE_INFINITY;
-        double beta = Double.POSITIVE_INFINITY;
+        double alpha, beta;
+        boolean fail = false;
+
+        if (totalDepth > 1) {
+            alpha = evaluation - evalWindow;
+            beta = evaluation + evalWindow;
+        } else {
+            alpha = Double.NEGATIVE_INFINITY;
+            beta = Double.POSITIVE_INFINITY;
+        }
+
         int hashFlag = TTable.flagAlpha; //if pv move not found flag this node as alpha
         pvLength[0] = 0;
 
@@ -122,51 +132,66 @@ public class Engine {
         MoveList moveList = MoveGeneration.getMoves(board);
         moveList.reorder(board, previousPV[0][0]);
 
+
         Board bestBoard = null;
         Board nextBoard;
+        boolean repetition, alphaIsARepetition;
         double eval;
-        boolean foundPV = false;
-        boolean repetition, alphaIsARepetition = false;
+        boolean foundPV;
+        do {
+            if (!fail) {
+                alpha = Double.NEGATIVE_INFINITY;
+                beta = Double.POSITIVE_INFINITY;
+            }
 
-        for (int i = 0; i < moveList.count; i++) {
-            nextBoard = new Board(board);
-            nextBoard.makeMove(moveList.moves[i]);
+            foundPV = false;
+            alphaIsARepetition = false;
 
-            repetition = Repetition.addToHistory(nextBoard.zobristKey, Repetition.treeFlag);
-            if (repetition) {
-                eval = 0;
-            } else {
-                if (foundPV) {
-                    eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha);
-                    if ((eval > alpha) && (eval < beta)) { //if move searched after pv found is better than pv then have to full search move
+            for (int i = 0; i < moveList.count; i++) {
+                nextBoard = new Board(board);
+                nextBoard.makeMove(moveList.moves[i]);
+
+                repetition = Repetition.addToHistory(nextBoard.zobristKey, Repetition.treeFlag);
+                if (repetition) {
+                    eval = 0;
+                } else {
+                    if (foundPV) {
+                        eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha);
+                        if ((eval > alpha) && (eval < beta)) { //if move searched after pv found is better than pv then have to full search move
+                            eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
+                        }
+                    } else {
                         eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
                     }
-                } else {
-                    eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
+                }
+                Repetition.removeFromHistory(nextBoard.zobristKey);
+
+                //System.out.printf("Move: %s, Eval: %.2f\n",MoveList.toStringMove(moveList.moves[i]), eval);
+
+                if (System.currentTimeMillis() - startTime > thinkTime) { //if timelimit reached
+                    return null;
+                }
+                //beta is currently infinity so nothing is greater than beta
+                if (eval > alpha) {
+                    alpha = eval;
+                    alphaIsARepetition = repetition;
+                    bestBoard = nextBoard;
+                    foundPV = true;
+                    hashFlag = TTable.flagExact;
+
+                    pvTable[0][0] = moveList.moves[i];
+                    for (int j = 1; j < pvLength[1]; j++) {
+                        pvTable[0][j] = pvTable[1][j];
+                    }
+                    pvLength[0] = pvLength[1];
                 }
             }
-            Repetition.removeFromHistory(nextBoard.zobristKey);
-
-            //System.out.printf("Move: %s, Eval: %.2f\n",MoveList.toStringMove(moveList.moves[i]), eval);
-
-            if (System.currentTimeMillis() - startTime > thinkTime) { //if timelimit reached
-                return null;
+            if (fail) {
+                break;
             }
-            //beta is currently infinity so nothing is greater than beta
-            if (eval > alpha) {
-                alpha = eval;
-                alphaIsARepetition = repetition;
-                bestBoard = nextBoard;
-                foundPV = true;
-                hashFlag = TTable.flagExact;
+            fail = true;
+        } while (alpha <= (evaluation-evalWindow) || alpha >= (evaluation+evalWindow));
 
-                pvTable[0][0] = moveList.moves[i];
-                for (int j = 1; j < pvLength[1]; j++) {
-                    pvTable[0][j] = pvTable[1][j];
-                }
-                pvLength[0] = pvLength[1];
-            }
-        }
         if (!alphaIsARepetition) {
             TTable.writeValue(board.zobristKey, depth, alpha, hashFlag);
         }
@@ -191,13 +216,14 @@ public class Engine {
             int mate = MoveGeneration.mateCheck(board);
             if (mate == 0) {
                 eval = quiescence(board, alpha, beta);
-                //TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact); //this is breaking something
+//                TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact);
+                //THIS DOESNT WORK BECAUSE THE BOARD IS ALREADY BEING STORED IN THE PREVIOUS DEPTH
                 return eval;
             } else if (mate == 1) {
-                //TTable.writeValue(board.zobristKey, depth, -999999999 - depth, TTable.flagExact);
+//                TTable.writeValue(board.zobristKey, depth, -999999999 - depth, TTable.flagExact);
                 return -999999999 - depth;
             } else {
-                //TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
+//                TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
                 return 0;
             }
         }
@@ -281,10 +307,10 @@ public class Engine {
 
                 alphaIsARepetition = repetition; //if eval is 0 because of repetition and alpha < 0, alpha cannot be trusted
                 pvTable[pvIndex][pvIndex] = moveList.moves[i];
-                for (int j = pvIndex+1; j < pvLength[pvIndex+1]; j++) {
-                    pvTable[pvIndex][j] = pvTable[pvIndex+1][j];
+                for (int j = pvIndex + 1; j < pvLength[pvIndex + 1]; j++) {
+                    pvTable[pvIndex][j] = pvTable[pvIndex + 1][j];
                 }
-                pvLength[pvIndex] = pvLength[pvIndex+1];
+                pvLength[pvIndex] = pvLength[pvIndex + 1];
             }
         }
         if (!alphaIsARepetition) {
@@ -355,23 +381,23 @@ public class Engine {
 
         int hashFlag = TTable.flagAlpha;
         double eval = TTable.getValue(board.zobristKey, depth, alpha, beta);
-        /*if (eval != TTable.noValue) { //if this position is already evaluated with this depth
+        if (eval != TTable.noValue) { //if this position is already evaluated with this depth
             nodes++;
             return eval;
-        }*/
+        }
 
         if (depth == 0) {
             nodes++;
             int mate = MoveGeneration.mateCheck(board);
             if (mate == 0) {
                 eval = quiescence(board, alpha, beta, parentNode);
-                //TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact); //this is breaking something
+//                TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact); //this is breaking something
                 return eval;
             } else if (mate == 1) {
-                //TTable.writeValue(board.zobristKey, depth, -999999999 - depth, TTable.flagExact);
+//                TTable.writeValue(board.zobristKey, depth, -999999999 - depth, TTable.flagExact);
                 return -999999999 - depth;
             } else {
-                //TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
+//                TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
                 return 0;
             }
         }
@@ -438,10 +464,10 @@ public class Engine {
                 alphaIsARepetition = repetition; //if eval is 0 because of repetition and alpha < 0, alpha cannot be trusted
 
                 pvTable[pvIndex][pvIndex] = moveList.moves[i];
-                for (int j = pvIndex+1; j < pvLength[pvIndex+1]; j++) {
-                    pvTable[pvIndex][j] = pvTable[pvIndex+1][j];
+                for (int j = pvIndex + 1; j < pvLength[pvIndex + 1]; j++) {
+                    pvTable[pvIndex][j] = pvTable[pvIndex + 1][j];
                 }
-                pvLength[pvIndex] = pvLength[pvIndex+1];
+                pvLength[pvIndex] = pvLength[pvIndex + 1];
 
                 currentNode.flag = SearchNode.NewAlpha;
                 parentNode.addChild(currentNode);
