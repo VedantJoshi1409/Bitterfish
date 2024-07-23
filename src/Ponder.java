@@ -68,7 +68,7 @@ public class Ponder extends Thread {
 
         MoveList moveList = MoveGeneration.getMoves(board);
         pvLength[0] = 0;
-        moveList.reorder(board, pvTable[0][0]);
+        moveList.reorder(board, pvTable[0][0], 0);
 
         Board bestBoard = null;
         Board nextBoard;
@@ -158,7 +158,7 @@ public class Ponder extends Thread {
 
         int pvIndex = totalDepth - depth;
         pvLength[pvIndex] = pvIndex;
-        moveList.reorder(board, pvTable[pvIndex][pvIndex]);
+        moveList.reorder(board, pvTable[pvIndex][pvIndex], pvIndex);
 
         for (int i = 0; i < moveList.count; i++) {
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
@@ -227,7 +227,7 @@ public class Ponder extends Thread {
 
         MoveList moveList = MoveGeneration.getMoves(board);
         Board nextBoard;
-        moveList.reorder(board, 0);
+        moveList.reorder(board, 0, 0);
 
         for (int i = 0; i < moveList.count; i++) {
             if (MoveList.getCaptureFlag(moveList.moves[i]) == 1) {

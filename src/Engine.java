@@ -8,6 +8,9 @@ public class Engine {
     static long[][] previousPV = new long[maxDepth][maxDepth];
     static double evaluation;
 
+    static long[][] killerMoves = new long[2][maxDepth];
+    static int[][] historyMoves = new int[6][64];
+
     static int totalDepth;
     static int nodes;
     static long thinkTime, startTime, endTime;
@@ -51,7 +54,7 @@ public class Engine {
                 if (Main.uci) {
                     System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime-startTime), MoveList.toStringPvUCI(previousPV), (int)evaluation, (int)TTable.hashfull());
                 }
-//                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
+                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
             } else {
                 break;
             }
@@ -120,7 +123,7 @@ public class Engine {
         //No need to check for mate or 50 move rule draw in this "wrapper" class as those checks are made in Main.play()
 
         MoveList moveList = MoveGeneration.getMoves(board);
-        moveList.reorder(board, previousPV[0][0]);
+        moveList.reorder(board, previousPV[0][0], 0);
 
         Board bestBoard = null;
         Board nextBoard;
@@ -239,7 +242,7 @@ public class Engine {
         boolean foundPV = false;
         boolean repetition, alphaIsARepetition = false;
 
-        moveList.reorder(board, previousPV[pvIndex][pvIndex]);
+        moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex);
         for (int i = 0; i < moveList.count; i++) {
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
                 return timeOut;
@@ -268,6 +271,11 @@ public class Engine {
             }
 
             if (eval >= beta) {
+                if (MoveList.getCaptureFlag(moveList.moves[i]) == 0) {
+                    killerMoves[1][pvIndex] = killerMoves[0][pvIndex];
+                    killerMoves[0][pvIndex] = moveList.moves[i];
+                }
+
                 if (!repetition) {
                     TTable.writeValue(board.zobristKey, depth, beta, TTable.flagBeta);
                 } //if repetition occurs, this value is not trustworthy
@@ -275,6 +283,10 @@ public class Engine {
                 return beta;
             }
             if (eval > alpha) {
+                if (MoveList.getCaptureFlag(moveList.moves[i]) == 0) {
+                    historyMoves[MoveList.getPiece(moveList.moves[i])][MoveList.getEndSquare(moveList.moves[i])] = pvIndex;
+                }
+
                 hashFlag = TTable.flagExact;
                 alpha = eval;
                 foundPV = true;
@@ -304,7 +316,7 @@ public class Engine {
 
         MoveList moveList = MoveGeneration.getMoves(board);
         Board nextBoard;
-        moveList.reorder(board, 0);
+        moveList.reorder(board, 0, 0);
 
         for (int i = 0; i < moveList.count; i++) {
             if (MoveList.getCaptureFlag(moveList.moves[i]) == 1) {
@@ -391,7 +403,7 @@ public class Engine {
         //boolean foundPV = false;
         boolean repetition, alphaIsARepetition = false;
 
-        moveList.reorder(board, previousPV[pvIndex][pvIndex]);
+        moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex);
         for (int i = 0; i < moveList.count; i++) {
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
                 return timeOut;
@@ -468,7 +480,7 @@ public class Engine {
         MoveList moveList = MoveGeneration.getMoves(board);
         Board nextBoard;
         SearchNode currentNode;
-        moveList.reorder(board, 0);
+        moveList.reorder(board, 0, 0);
 
         for (int i = 0; i < moveList.count; i++) {
             if (MoveList.getCaptureFlag(moveList.moves[i]) == 1) {

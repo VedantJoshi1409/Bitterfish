@@ -1,5 +1,6 @@
 import NNUEBridge.NNUEBridge;
 
+import javax.swing.text.Position;
 import java.util.Scanner;
 
 public class Main {
@@ -13,8 +14,8 @@ public class Main {
     static boolean uci = false;
 
     public static void main(String[] args) {
-//        nnue = true;
-//        init();
+        nnue = true;
+        init();
 
 //        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
 //        Board board = new Board("rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1");
@@ -24,7 +25,7 @@ public class Main {
 //        node.flag = SearchNode.StartNode;
 //        TreeGUI.displayTree(node);
 
-        Scanner sc = new Scanner(System.in);
+        /*Scanner sc = new Scanner(System.in);
         String lineIn = sc.nextLine();
         boolean firstLoop = true;
 
@@ -69,13 +70,13 @@ public class Main {
                 Repetition.clearTables();
                 TTable.clearTables();
             }
-        }
+        }*/
 
 //        engineTest(board, gui, 200);
 //        Engine.engineMove(6, board);
-        
-//        Client client = new Client(1409);
-//        client.initMatch();
+
+        Client client = new Client(1409);
+        client.initMatch();
     }
 
     static void play(Board board, Gui gui, int timeLimit, boolean player) {

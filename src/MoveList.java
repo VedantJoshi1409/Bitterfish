@@ -94,7 +94,7 @@ public class MoveList {
         count++;
     }
 
-    void reorder(Board board, long pvMove) {
+    void reorder(Board board, long pvMove, int ply) {
         long[][] moveAndScore = new long[count][2];
         long move;
         int attacker;
@@ -123,11 +123,16 @@ public class MoveList {
                     victim = 4;
                 }
                 score += attackScores[attacker][victim];
-            } /*else {
-                if (attacker == 5 && getCastleFlag(move) == 0) {
-                    score -= 250;
-                } //if king move
-            }*/ //doesnt seem to make a difference
+                score += 3000;
+            } else {
+                 if (Engine.killerMoves[0][ply] == move) {
+                     score += 2000;
+                 } else if (Engine.killerMoves[1][ply] == move) {
+                     score += 1000;
+                 } else {
+                     score += Engine.historyMoves[attacker][getEndSquare(move)];
+                 }
+            }
 
             if (move == pvMove) {
                 score += 999999999;
