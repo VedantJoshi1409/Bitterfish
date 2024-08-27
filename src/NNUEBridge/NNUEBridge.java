@@ -4,7 +4,7 @@ import java.io.File;
 
 public class NNUEBridge {
     static {
-        File dll = new File("probe.dll");
+        File dll = new File("dependencies/probe.dll");
         System.load(dll.getAbsolutePath());
     }
 

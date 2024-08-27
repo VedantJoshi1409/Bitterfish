@@ -14,8 +14,8 @@ public class Main {
     static boolean uci = false;
 
     public static void main(String[] args) {
-        nnue = true;
-        init();
+//        nnue = true;
+//        init();
 
 //        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
 //        Board board = new Board("rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1");
@@ -25,11 +25,12 @@ public class Main {
 //        node.flag = SearchNode.StartNode;
 //        TreeGUI.displayTree(node);
 
-        /*Scanner sc = new Scanner(System.in);
-        String lineIn = sc.nextLine();
+        Scanner sc = new Scanner(System.in);
         boolean firstLoop = true;
 
         while (true) {
+            String lineIn = sc.nextLine();
+
             if (lineIn.equals("uci")) {
                 uci = true;
                 nnue = true;
@@ -39,10 +40,14 @@ public class Main {
                 }
                 System.out.println("id name Bitterfish");
                 System.out.println("id author Vedant Joshi");
+                System.out.println();
+                System.out.println("option name NNUE Evaluation type check default true");
+                System.out.println("option name Clear Tables type button");
+                System.out.println();
                 System.out.println("uciok");
                 UCI uci = new UCI();
                 uci.loop();
-            } else if (lineIn.equals("gui")) {
+            } /*else if (lineIn.equals("gui")) {
                 if (firstLoop) {
                     init();
                     firstLoop = false;
@@ -69,14 +74,33 @@ public class Main {
                 gui.dispose();
                 Repetition.clearTables();
                 TTable.clearTables();
-            }
+
+            } else if (lineIn.equals("test")) {
+                nnue=true;
+                init();
+                Board board = new Board(PosConstants.startPos);
+                Gui gui = new Gui(board, 1, false);
+
+                while (true) {
+                    engineTest(board, gui, 3000);
+                    board = new Board(PosConstants.startPos);
+                    System.out.println(TTable.hashfull());
+                }
+            }*/
+        }
+        /*Board board = new Board(PosConstants.startPos);
+        Gui gui = new Gui(board, 1, false);
+
+        while (true) {
+            board = new Board(PosConstants.startPos);
+
+            engineTest(board, gui, 50);
+//            Engine.engineMove(6, board);
+
         }*/
 
-//        engineTest(board, gui, 200);
-//        Engine.engineMove(6, board);
-
-        Client client = new Client(1409);
-        client.initMatch();
+//        Client client = new Client(1409);
+//        client.initMatch();
     }
 
     static void play(Board board, Gui gui, int timeLimit, boolean player) {
@@ -120,13 +144,13 @@ public class Main {
     static void engineTest(Board board, Gui gui, int timeLimit) {
         //Scanner sc = new Scanner(System.in);
         while (MoveGeneration.getMoves(board).count > 0 && Repetition.getRepetitionAmount(board.zobristKey, Repetition.historyFlag) < 3) {
-            System.out.println(board.boardToFen());
+//            System.out.println(board.boardToFen());
             board = Engine.engineMove(board, timeLimit);
             Repetition.addToHistory(board.zobristKey, Repetition.historyFlag);
 
             gui.panel.board = board;
             gui.repaint();
-            System.out.println();
+//            System.out.println();
             //sc.nextInt();
         }
         if (board.player) {
@@ -151,6 +175,7 @@ public class Main {
         }
         MoveGeneration.initAttack();
         Zobrist.initKeys();
+        TTable.init(64000000);
     }
 
     private static void speedTest(Board board, int repetitions) {

@@ -3,6 +3,7 @@ import java.util.Scanner;
 public class UCI {
     Scanner sc;
     Board board;
+    int baseMovetime = -1;
 
     public UCI() {
         sc = new Scanner(System.in);
@@ -12,6 +13,9 @@ public class UCI {
         String lineIn = sc.nextLine();
         while (!lineIn.equals("quit")) {
             switch (lineIn.split(" ")[0]) {
+                case "setoption":
+                    setoption(lineIn);
+                    break;
                 case "isready":
                     System.out.println("readyok");
                     break;
@@ -30,6 +34,15 @@ public class UCI {
             }
 
             lineIn = sc.nextLine();
+        }
+    }
+
+    void setoption(String command) {
+        String[] commands = command.split(" ");
+        if (commands[2].equalsIgnoreCase("nnue")) {
+            Main.nnue = Boolean.parseBoolean(commands[4]);
+        } else if (commands[2].equalsIgnoreCase("clear")) {
+            TTable.clearTables();
         }
     }
 
@@ -72,22 +85,42 @@ public class UCI {
     void go(String command) {
         String[] commands = command.split(" ");
         int movetime = 1000;
-        boolean setTime = false;
+        int incBonus = 0;
         String side;
+        String inc;
         if (board.player) {
             side = "wtime";
+            inc = "winc";
         } else {
             side = "btime";
+            inc = "binc";
         }
+        int remainingTime = baseMovetime;
 
         for (int i = 0; i < commands.length; i++) {
             if (commands[i].equals("movetime")) {
                 movetime = Integer.parseInt(commands[i + 1]);
-                setTime = true;
+                break;
             }
-            if (!setTime && commands[i].equals(side)) {
-                movetime = Math.max(Integer.parseInt(commands[i + 1]) / 50, 250);
+            if (commands[i].equals(side)) {
+                remainingTime = Integer.parseInt(commands[i + 1]);
+                if (remainingTime > baseMovetime || remainingTime < 5000) {
+                    baseMovetime = remainingTime;
+                }
+                movetime = Math.max(baseMovetime / 50, 250);
             }
+            if (commands[i].equals("movestogo")) {
+                movetime = Math.max(remainingTime / Integer.parseInt(commands[i + 1]), 250);
+                break;
+            }
+            if (commands[i].equals(inc)) {
+                incBonus = Integer.parseInt(commands[i + 1]);
+            }
+        }
+        if (movetime != 250) {
+            movetime+=incBonus;
+        } else {
+            movetime+=incBonus-200;
         }
 
         Board temp = Engine.engineMove(board, movetime);

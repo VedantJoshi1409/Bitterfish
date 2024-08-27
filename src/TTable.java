@@ -6,11 +6,16 @@ public class TTable {
     static final int flagBeta = 2;
     static final int noValue = 123456789;
 
-    static final int initialCapacity = 64000000;
-    static Hashtable<Integer, HashEntry> table = new Hashtable<>(initialCapacity);
+    static int capacity;
+    static Hashtable<Integer, HashEntry> table;
+
+    static void init(int capacity) {
+        TTable.capacity = capacity;
+        table = new Hashtable<>(capacity);
+    }
 
     static double getValue(long key, int depth, double alpha, double beta) {
-        HashEntry hashEntry = table.get((int) (key % initialCapacity));
+        HashEntry hashEntry = table.get((int) (key % capacity));
         if (hashEntry != null && hashEntry.key == key && hashEntry.depth >= depth) {
             //if there is not an entry, hashEntry will be null
             //incase key % initialCapacity leads to diff entry
@@ -28,7 +33,7 @@ public class TTable {
 
     static void writeValue(long key, int depth, double value, int flag) {
         HashEntry hashEntry;
-        int intKey = (int) (key % initialCapacity);
+        int intKey = (int) (key % capacity);
         hashEntry = table.get(intKey);
         if (hashEntry != null) {
             if (hashEntry.key == key) {
@@ -52,6 +57,6 @@ public class TTable {
     }
 
     static double hashfull() {
-        return (double) table.size() /initialCapacity*1000;
+        return (double) table.size() / capacity *1000;
     }
 }
