@@ -15,6 +15,7 @@ Has 2 options, a custom GUI and using the UCI (Universal Chess Interface)
 
 ### Move Generation:
 - Moves are generated using bitboards and attack masks
+- Magic bitboards for sliding pieces
 - Attack mask information is stored and updated inside a Board object
 - A 64 bit integer is used to represent a move with all the information needed encoded into their respective group of bits
 
