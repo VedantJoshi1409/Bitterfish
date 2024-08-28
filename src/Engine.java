@@ -126,7 +126,7 @@ public class Engine {
                 if (i == 0 || !foundPV)
                     eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
                 else {
-                    if (i >= fullDepthMoves && depth >= reductionLimit && ok_to_reduce()) {
+                    if (i >= fullDepthMoves && depth >= reductionLimit) {
                         eval = -negaMax(nextBoard, depth - 2, -alpha - 1, -alpha);
                     } else {
                         eval = alpha + 1;
@@ -264,7 +264,7 @@ public class Engine {
                 if (i == 0 || !foundPV)
                     eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
                 else {
-                    if (i >= fullDepthMoves && depth >= reductionLimit && ok_to_reduce()) {
+                    if (i >= fullDepthMoves && depth >= reductionLimit) {
                         eval = -negaMax(nextBoard, depth - 2, -alpha - 1, -alpha);
                     } else {
                         eval = alpha + 1;
@@ -347,11 +347,6 @@ public class Engine {
             }
         }
         return alpha;
-    }
-
-
-    private static boolean ok_to_reduce() {
-        return true;
     }
 
 
