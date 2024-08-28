@@ -15,12 +15,12 @@ public class Main {
     static boolean uci = false;
 
     public static void main(String[] args) {
-        nnue = true;
-        preInit();
-        postInit();
-
-        Board b = new Board("6k1/1p3rp1/p1n1Q2p/8/4p3/P4qP1/1PP2P2/1K6 w - - 0 36");
-        Engine.engineMove(6, b);
+//        nnue = true;
+//        preInit();
+//        postInit();
+//
+//        Board b = new Board("6k1/1p3rp1/p1n1Q2p/8/4p3/P4qP1/1PP2P2/1K6 w - - 0 36");
+//        Engine.engineMove(6, b);
 
 //        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
 //        Board board = new Board("rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1");
