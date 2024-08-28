@@ -34,6 +34,7 @@ public class Board {
     int halfMoveClock; //for 50 move rule
     int moveCount;
     int pieceCount;
+    int nonPawnMaterial;
 
     public Board(String fen) {
         String[][] stringBoard = fenToBoard(fen);
@@ -106,6 +107,7 @@ public class Board {
         this.endGame = board.endGame;
         this.halfMoveClock = board.halfMoveClock + 1;
         this.pieceCount = board.pieceCount;
+        this.nonPawnMaterial = board.nonPawnMaterial;
         if (this.player) {
             this.moveCount = board.moveCount + 1;
         } else {
@@ -118,6 +120,66 @@ public class Board {
 
         //this.moveLog = new long[board.moveLog.length+1];
         //System.arraycopy(board.moveLog, 0, this.moveLog, 0, board.moveLog.length);
+    }
+
+    public boolean equals(Board board) {
+        return this.fPawn == board.fPawn &&
+                this.fRook == board.fRook &&
+                this.fKnight == board.fKnight &&
+                this.fBishop == board.fBishop &&
+                this.fQueen == board.fQueen &&
+                this.fKing == board.fKing &&
+                this.fPawnAttackMask == board.fPawnAttackMask &&
+                this.fRookAttackMask == board.fRookAttackMask &&
+                this.fKnightAttackMask == board.fKnightAttackMask &&
+                this.fBishopAttackMask == board.fBishopAttackMask &&
+                this.fQueenAttackMask == board.fQueenAttackMask &&
+                this.fKingAttackMask == board.fKingAttackMask &&
+                this.fAttackMask == board.fAttackMask &&
+                this.fOccupied == board.fOccupied &&
+                this.ePawn == board.ePawn &&
+                this.eRook == board.eRook &&
+                this.eKnight == board.eKnight &&
+                this.eBishop == board.eBishop &&
+                this.eQueen == board.eQueen &&
+                this.eKing == board.eKing &&
+                this.ePawnAttackMask == board.ePawnAttackMask &&
+                this.eRookAttackMask == board.eRookAttackMask &&
+                this.eKnightAttackMask == board.eKnightAttackMask &&
+                this.eBishopAttackMask == board.eBishopAttackMask &&
+                this.eQueenAttackMask == board.eQueenAttackMask &&
+                this.eKingAttackMask == board.eKingAttackMask &&
+                this.eAttackMask == board.eAttackMask &&
+                this.eOccupied == board.eOccupied &&
+                this.occupied == board.occupied &&
+                this.previousPawnPush == board.previousPawnPush &&
+                this.castleRights == board.castleRights &&
+                this.zobristKey == board.zobristKey &&
+                this.pastMove == board.pastMove &&
+                this.startSquare == board.startSquare &&
+                this.endSquare == board.endSquare &&
+                this.moveType == board.moveType &&
+                this.mateFlag == board.mateFlag &&
+                this.capturingPiece == board.capturingPiece &&
+                this.victimPiece == board.victimPiece &&
+                this.enemyKingInCheck == board.enemyKingInCheck &&
+                this.castleState == board.castleState &&
+                this.wSMoved == board.wSMoved &&
+                this.wLMoved == board.wLMoved &&
+                this.bSMoved == board.bSMoved &&
+                this.bLMoved == board.bLMoved &&
+                this.player == board.player &&
+                this.endGame == board.endGame &&
+//                this.halfMoveClock == board.halfMoveClock &&
+//                this.moveCount == board.moveCount &&
+                this.pieceCount == board.pieceCount &&
+                this.nonPawnMaterial == board.nonPawnMaterial;
+    }
+
+    public void makeNullMove() {
+        pastMove = 0;
+        previousPawnPush = 0;
+        zobristKey ^= Zobrist.sideKey;
     }
 
     public void makeMove(long move) {
@@ -340,6 +402,8 @@ public class Board {
                 fPawnAttackMask = MoveGeneration.pawnAttackMask(fPawn, player);
 
             } else if ((fRook & endSquareBit) != 0) {
+                nonPawnMaterial--;
+
                 fRook &= ~endSquareBit;
                 zobristKey ^= Zobrist.pieceKeys[1 + shiftFactor][endSquare];
 
@@ -368,6 +432,8 @@ public class Board {
                 fUpdatedRook = true;
 
             } else if ((fKnight & endSquareBit) != 0) {
+                nonPawnMaterial--;
+
                 fKnight &= ~endSquareBit;
                 zobristKey ^= Zobrist.pieceKeys[2 + shiftFactor][endSquare];
 
@@ -380,6 +446,8 @@ public class Board {
                 }
 
             } else if ((fBishop & endSquareBit) != 0) {
+                nonPawnMaterial--;
+
                 fBishop &= ~endSquareBit;
                 zobristKey ^= Zobrist.pieceKeys[3 + shiftFactor][endSquare];
 
@@ -393,6 +461,8 @@ public class Board {
                 fUpdatedBishop = true;
 
             } else if ((fQueen & endSquareBit) != 0) {
+                nonPawnMaterial--;
+
                 fQueen &= ~endSquareBit;
                 zobristKey ^= Zobrist.pieceKeys[4 + shiftFactor][endSquare];
 
@@ -757,7 +827,8 @@ public class Board {
     }
 
     private String[][] fenToBoard(String fen) {
-        int pieceCount = 0;
+        pieceCount = 0;
+        int pawnMaterial = 0;
         wSMoved = true;
         wLMoved = true;
         bSMoved = true;
@@ -772,6 +843,9 @@ public class Board {
             }
             if (fen.charAt(i) != '/') {
                 if (!isDigit(fen.charAt(i))) {
+                    if (fen.charAt(i) == 'p' || fen.charAt(i) == 'P') {
+                        pawnMaterial++;
+                    }
                     tempBoard[column][row] = fen.substring(i, i + 1);
                     pieceCount++;
                     row++;
@@ -788,6 +862,7 @@ public class Board {
         }
 
         endGame = pieceCount <= 5;
+        nonPawnMaterial = pieceCount - pawnMaterial;
 
         player = fen.charAt(end + 1) != 'b';
         end += 3;

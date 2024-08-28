@@ -2,10 +2,13 @@
 *.exe
 *.jar
 
-#Ignore Ideastuff
+#Ignore Idea stuff
 .idea/
 out/
 BitterFish.iml
 
 #Ignore tablebase
 tablebase/
+
+#Ignore old versions
+Base/

@@ -1,4 +1,9 @@
 public class Engine {
+    final static int nonEval = 123456789;
+
+    final static int nullMoveReduction = 2;
+    static boolean inNullMove;
+
     //static Ponder ponder;
     static int maxDepth = 30;
     static boolean tbMove;
@@ -15,7 +20,6 @@ public class Engine {
     static int totalDepth;
     static int nodes;
     static long thinkTime, startTime, endTime;
-    static int timeOut = 123456789;
     static boolean kill;
 
 
@@ -37,6 +41,7 @@ public class Engine {
 
         tbMove = false;
         for (int i = 1; i < maxDepth && !kill; i++) { //arbitrary depth limit
+            inNullMove = false;
             if (i == 1) { //so first move can be made
                 thinkTime = Integer.MAX_VALUE;
             } else {
@@ -54,9 +59,9 @@ public class Engine {
 
                 endTime = System.currentTimeMillis();
                 if (Main.uci) {
-                    System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime-startTime), MoveList.toStringPvUCI(previousPV), (int)evaluation, (int)TTable.hashfull());
+                    System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime - startTime), MoveList.toStringPvUCI(previousPV), (int) evaluation, (int) TTable.hashfull());
                 }
-//                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
+                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
             } else {
                 break;
             }
@@ -77,6 +82,7 @@ public class Engine {
         startTime = System.currentTimeMillis();
 
         for (int i = 1; i <= depth; i++) {
+            inNullMove = false;
 
             totalDepth = i;
             nodes = 0;
@@ -103,8 +109,8 @@ public class Engine {
     private static Board negaMax(Board board, int depth) {
         Repetition.refreshTables(); //reset tree table to actual positions
 
-        double alpha = Double.NEGATIVE_INFINITY;
-        double beta = Double.POSITIVE_INFINITY;
+        double alpha = Integer.MIN_VALUE;
+        double beta = Integer.MAX_VALUE;
         int hashFlag = TTable.flagAlpha; //if pv move not found flag this node as alpha
         pvLength[0] = 0;
 
@@ -187,17 +193,17 @@ public class Engine {
             int[] request = TBProbe.getEval(board);
             if (request.length == 1) {
                 if (request[0] == TBProbe.TB_RESULT_CHECKMATE) {
-                    return -999999999 - depth;
+                    return -9999999 - depth;
                 } else if (request[0] == TBProbe.TB_RESULT_STALEMATE) {
                     return 0;
                 }
-            } else if (request.length > 1){
+            } else if (request.length > 1) {
                 if (request[0] == TBProbe.TB_LOSS) {
-                    return -999999999 - depth ;
+                    return -9999999 - depth;
                 } else if (request[0] == TBProbe.TB_DRAW || request[0] == TBProbe.TB_BLESSED_LOSS || request[0] == TBProbe.TB_CURSED_WIN) {
                     return 0;
                 } else if (request[0] == TBProbe.TB_WIN) {
-                    return 999999999 + depth;
+                    return 9999999 + depth;
                 }
             }
         }
@@ -212,7 +218,7 @@ public class Engine {
             return eval;
         }
 
-        if (depth == 0) {
+        if (depth <= 0) {
             nodes++;
             int mate = MoveGeneration.mateCheck(board);
             if (mate == 0) {
@@ -220,19 +226,20 @@ public class Engine {
                 //TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact); //this is breaking something
                 return eval;
             } else if (mate == 1) {
-                //TTable.writeValue(board.zobristKey, depth, -999999999 - depth, TTable.flagExact);
-                return -999999999 - depth;
+                //TTable.writeValue(board.zobristKey, depth, -9999999 - depth, TTable.flagExact);
+                return -9999999 - depth;
             } else {
                 //TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
                 return 0;
             }
         }
 
+
         MoveList moveList = MoveGeneration.getMoves(board);
         if (moveList.count == 0) {
             nodes++;
             if ((board.fKing & board.eAttackMask) != 0) {
-                return -999999999 - depth;
+                return -9999999 - depth;
             } else {
                 return 0;
             }
@@ -243,13 +250,25 @@ public class Engine {
         }
 
         Board nextBoard;
+
+        if (!inNullMove && pvIndex >= 2 && (((board.eKing | board.ePawn) & ~board.eOccupied) != 0) && depth >= nullMoveReduction + 1 && (board.eKing & board.fAttackMask) == 0) {
+            inNullMove = true;
+            nextBoard = new Board(board);
+            nextBoard.makeNullMove();
+            eval = -negaMax(nextBoard, depth - 1 - nullMoveReduction, -beta, -beta + 1);
+            inNullMove = false;
+            if (eval >= beta) {
+                return beta;
+            }
+        }
+
         boolean foundPV = false;
         boolean repetition, alphaIsARepetition = false;
 
         moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex);
         for (int i = 0; i < moveList.count; i++) {
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
-                return timeOut;
+                return nonEval;
             }
 
             nextBoard = new Board(board);
@@ -271,7 +290,7 @@ public class Engine {
             Repetition.removeFromHistory(nextBoard.zobristKey); //once all searches completed with added repetition count, can remove the count
 
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
-                return timeOut;
+                return nonEval;
             }
 
             if (eval >= beta) {
@@ -297,10 +316,10 @@ public class Engine {
 
                 alphaIsARepetition = repetition; //if eval is 0 because of repetition and alpha < 0, alpha cannot be trusted
                 pvTable[pvIndex][pvIndex] = moveList.moves[i];
-                for (int j = pvIndex+1; j < pvLength[pvIndex+1]; j++) {
-                    pvTable[pvIndex][j] = pvTable[pvIndex+1][j];
+                for (int j = pvIndex + 1; j < pvLength[pvIndex + 1]; j++) {
+                    pvTable[pvIndex][j] = pvTable[pvIndex + 1][j];
                 }
-                pvLength[pvIndex] = pvLength[pvIndex+1];
+                pvLength[pvIndex] = pvLength[pvIndex + 1];
             }
         }
         if (!alphaIsARepetition) {
@@ -384,8 +403,8 @@ public class Engine {
                 //TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact); //this is breaking something
                 return eval;
             } else if (mate == 1) {
-                //TTable.writeValue(board.zobristKey, depth, -999999999 - depth, TTable.flagExact);
-                return -999999999 - depth;
+                //TTable.writeValue(board.zobristKey, depth, -9999999 - depth, TTable.flagExact);
+                return -9999999 - depth;
             } else {
                 //TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
                 return 0;
@@ -396,7 +415,7 @@ public class Engine {
         if (moveList.count == 0) {
             nodes++;
             if ((board.fKing & board.eAttackMask) != 0) {
-                return -999999999 - depth;
+                return -9999999 - depth;
             } else {
                 return 0;
             }
@@ -410,7 +429,7 @@ public class Engine {
         moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex);
         for (int i = 0; i < moveList.count; i++) {
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
-                return timeOut;
+                return nonEval;
             }
 
             nextBoard = new Board(board);
@@ -436,7 +455,7 @@ public class Engine {
             currentNode.eval = eval;
 
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
-                return timeOut;
+                return nonEval;
             }
 
             if (eval >= beta) {
@@ -454,10 +473,10 @@ public class Engine {
                 alphaIsARepetition = repetition; //if eval is 0 because of repetition and alpha < 0, alpha cannot be trusted
 
                 pvTable[pvIndex][pvIndex] = moveList.moves[i];
-                for (int j = pvIndex+1; j < pvLength[pvIndex+1]; j++) {
-                    pvTable[pvIndex][j] = pvTable[pvIndex+1][j];
+                for (int j = pvIndex + 1; j < pvLength[pvIndex + 1]; j++) {
+                    pvTable[pvIndex][j] = pvTable[pvIndex + 1][j];
                 }
-                pvLength[pvIndex] = pvLength[pvIndex+1];
+                pvLength[pvIndex] = pvLength[pvIndex + 1];
 
                 currentNode.flag = SearchNode.NewAlpha;
                 parentNode.addChild(currentNode);
