@@ -23,6 +23,7 @@ Has 2 options, a custom GUI and using the UCI (Universal Chess Interface)
 - Move reordering based on attacker and victim values of a move
 - The principle variation is collected and used for iterative deepening
 - Killer moves are collected and used to reorder moves
+- Transposition table using Zobrist hashing
 - Quiescence search 
 - Syzygy tablebase for endgames
 

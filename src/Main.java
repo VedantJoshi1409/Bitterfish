@@ -16,7 +16,8 @@ public class Main {
 
     public static void main(String[] args) {
 //        nnue = true;
-//        init();
+//        preInit();
+//        postInit();
 
 //        Board board = new Board("4K3/4P3/3q4/8/8/8/6k1/8 b - -");
 //        Board board = new Board("rnbqkbnr/pppppppp/8/8/2P5/8/PP1PPPPP/RNBQKBNR b KQkq c3 0 1");
