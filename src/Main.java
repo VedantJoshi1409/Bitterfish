@@ -1,11 +1,12 @@
 import NNUEBridge.NNUEBridge;
+import TB.Tablebase;
 
-import javax.swing.text.Position;
 import java.util.Scanner;
 
 public class Main {
     static String bigNet = "nn-b1a57edbea57.nnue";
     static String smallNet = "nn-baff1ede1f90.nnue";
+    static String tbPath = "dependencies/tablebase";
     static boolean flip;
     static boolean player;
     static boolean tablebase;
@@ -35,7 +36,7 @@ public class Main {
                 uci = true;
                 nnue = true;
                 if (firstLoop) {
-                    init();
+                    preInit();
                     firstLoop = false;
                 }
                 System.out.println("id name Bitterfish");
@@ -43,13 +44,14 @@ public class Main {
                 System.out.println();
                 System.out.println("option name NNUE Evaluation type check default true");
                 System.out.println("option name Clear Tables type button");
+                System.out.println("option name Tablebase Path type string default dependencies/tablebase");
                 System.out.println();
                 System.out.println("uciok");
                 UCI uci = new UCI();
                 uci.loop();
-            } /*else if (lineIn.equals("gui")) {
+            } else if (lineIn.equals("gui")) {
                 if (firstLoop) {
-                    init();
+                    preInit();
                     firstLoop = false;
                 }
 
@@ -67,7 +69,7 @@ public class Main {
                 timeLimit = menu.thinkTimeAmount;
 
 
-                init();
+                preInit();
                 Board board = new Board(PosConstants.startPos);
                 Gui gui = new Gui(board, menu.scale, flip);
                 play(board, gui, timeLimit, player);
@@ -77,7 +79,7 @@ public class Main {
 
             } else if (lineIn.equals("test")) {
                 nnue=true;
-                init();
+                preInit();
                 Board board = new Board(PosConstants.startPos);
                 Gui gui = new Gui(board, 1, false);
 
@@ -86,7 +88,7 @@ public class Main {
                     board = new Board(PosConstants.startPos);
                     System.out.println(TTable.hashfull());
                 }
-            }*/
+            }
         }
         /*Board board = new Board(PosConstants.startPos);
         Gui gui = new Gui(board, 1, false);
@@ -169,13 +171,17 @@ public class Main {
         }
     }
 
-    static void init() {
+    static void preInit() {
         if (nnue) {
             NNUEBridge.init(bigNet, smallNet);
         }
         MoveGeneration.initAttack();
         Zobrist.initKeys();
         TTable.init(64000000);
+    }
+
+    static void postInit() {
+        Tablebase.init(tbPath);
     }
 
     private static void speedTest(Board board, int repetitions) {

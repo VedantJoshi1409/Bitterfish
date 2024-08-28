@@ -17,6 +17,7 @@ public class UCI {
                     setoption(lineIn);
                     break;
                 case "isready":
+                    Main.postInit();
                     System.out.println("readyok");
                     break;
                 case "ucinewgame":
@@ -40,9 +41,12 @@ public class UCI {
     void setoption(String command) {
         String[] commands = command.split(" ");
         if (commands[2].equalsIgnoreCase("nnue")) {
-            Main.nnue = Boolean.parseBoolean(commands[4]);
+            Main.nnue = Boolean.parseBoolean(commands[5]);
         } else if (commands[2].equalsIgnoreCase("clear")) {
             TTable.clearTables();
+        } else if (commands[2].equalsIgnoreCase("tablebase")) {
+            Main.tbPath = commands[5];
+            //setoption name Tablebase Path value
         }
     }
 

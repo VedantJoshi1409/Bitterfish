@@ -13,7 +13,7 @@ public class Client {
         try {
             socket = new Socket("localhost", port);
             oos = new ObjectOutputStream(socket.getOutputStream());
-            oos.writeObject("V11");
+            oos.writeObject("V12");
 
             ois = new ObjectInputStream(socket.getInputStream());
             uci = new UCI();

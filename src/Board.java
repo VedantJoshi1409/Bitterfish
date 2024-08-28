@@ -54,7 +54,6 @@ public class Board {
         victimPiece = 0;
         enemyKingInCheck = false;
         castleState = 0;
-        endGame = false;
         //moveLog = new long[0];
     }
 
@@ -167,7 +166,7 @@ public class Board {
             moveType = 1;
             fOccupied &= ~endSquareBit;
             pieceCount--;
-            endGame = pieceCount <= 6;
+            endGame = pieceCount <= 5;
         }
         occupied = eOccupied | fOccupied;
 
@@ -758,6 +757,7 @@ public class Board {
     }
 
     private String[][] fenToBoard(String fen) {
+        int pieceCount = 0;
         wSMoved = true;
         wLMoved = true;
         bSMoved = true;
@@ -773,6 +773,7 @@ public class Board {
             if (fen.charAt(i) != '/') {
                 if (!isDigit(fen.charAt(i))) {
                     tempBoard[column][row] = fen.substring(i, i + 1);
+                    pieceCount++;
                     row++;
                 } else {
                     row += Integer.parseInt(fen.substring(i, i + 1));
@@ -785,6 +786,8 @@ public class Board {
                 row = 0;
             }
         }
+
+        endGame = pieceCount <= 5;
 
         player = fen.charAt(end + 1) != 'b';
         end += 3;
@@ -1055,6 +1058,7 @@ public class Board {
         output += "enemyKingInCheck: " + enemyKingInCheck + "\n";
         output += "castleState: " + castleState + "\n";
         output += "player: " + player + "\n";
+        output += "endgame: " + endGame + "\n";
 
         output += "\n";
         return output;

@@ -292,6 +292,23 @@ public class MoveList {
         }
     }
 
+    public long getMoveFromTB(int from, int to, int promote) {
+        if (promote != 0) {
+            for (int i = 0; i < count; i++) {
+                if (getStartSquare(moves[i]) == from && getEndSquare(moves[i]) == to && getPromotePiece(moves[i]) == promote) {
+                    return moves[i];
+                }
+            }
+        } else {
+            for (int i = 0; i < count; i++) {
+                if (getStartSquare(moves[i]) == from && getEndSquare(moves[i]) == to) {
+                    return moves[i];
+                }
+            }
+        }
+        return -1;
+    }
+
     public String toString() {
         String output = "";
         long move;

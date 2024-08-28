@@ -1,0 +1,11 @@
+#Ignore compiled binaries
+*.exe
+*.jar
+
+#Ignore Ideastuff
+.idea/
+out/
+BitterFish.iml
+
+#Ignore tablebase
+tablebase/

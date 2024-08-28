@@ -1,6 +1,7 @@
 public class Engine {
     //static Ponder ponder;
     static int maxDepth = 30;
+    static boolean tbMove;
 
     //static Ponder ponder;
     static long[] pvLength = new long[maxDepth];
@@ -34,6 +35,7 @@ public class Engine {
             }
         }*/
 
+        tbMove = false;
         for (int i = 1; i < maxDepth && !kill; i++) { //arbitrary depth limit
             if (i == 1) { //so first move can be made
                 thinkTime = Integer.MAX_VALUE;
@@ -54,15 +56,11 @@ public class Engine {
                 if (Main.uci) {
                     System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime-startTime), MoveList.toStringPvUCI(previousPV), (int)evaluation, (int)TTable.hashfull());
                 }
-                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
+//                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
             } else {
                 break;
             }
-            if (MoveGeneration.getMoves(bestBoard).count == 0 && (bestBoard.fKing & bestBoard.eAttackMask) != 0) {
-                try {
-                    Thread.sleep(timeLimit - (System.currentTimeMillis() - startTime));
-                } catch (InterruptedException ignored) {
-                }
+            if (MoveGeneration.getMoves(bestBoard).count == 0 && (bestBoard.fKing & bestBoard.eAttackMask) != 0 || tbMove) {
                 break;
             }
         }
@@ -105,16 +103,6 @@ public class Engine {
     private static Board negaMax(Board board, int depth) {
         Repetition.refreshTables(); //reset tree table to actual positions
 
-        if (board.endGame) {
-            long[] request = Tablebase.getEval(board);
-            if (request.length != 0) {
-                long bestMove = request[0];
-                Board bestBoard = new Board(board);
-                bestBoard.makeMove(bestMove);
-                return bestBoard;
-            }
-        }
-
         double alpha = Double.NEGATIVE_INFINITY;
         double beta = Double.POSITIVE_INFINITY;
         int hashFlag = TTable.flagAlpha; //if pv move not found flag this node as alpha
@@ -123,6 +111,22 @@ public class Engine {
         //No need to check for mate or 50 move rule draw in this "wrapper" class as those checks are made in Main.play()
 
         MoveList moveList = MoveGeneration.getMoves(board);
+        if (board.endGame) {
+            int[] request = TBProbe.getEval(board);
+            if (request.length > 1) {
+                int from = request[2];
+                int to = request[3];
+                int promote = request[4];
+                long move = moveList.getMoveFromTB(from, to, promote);
+
+                if (move != -1) {
+                    Board output = new Board(board);
+                    output.makeMove(move);
+                    tbMove = true;
+                    return output;
+                }
+            }
+        }
         moveList.reorder(board, previousPV[0][0], 0);
 
         Board bestBoard = null;
@@ -179,6 +183,25 @@ public class Engine {
 
     private static double negaMax(Board board, int depth, double alpha, double beta) {
 
+        if (board.endGame) {
+            int[] request = TBProbe.getEval(board);
+            if (request.length == 1) {
+                if (request[0] == TBProbe.TB_RESULT_CHECKMATE) {
+                    return -999999999 - depth;
+                } else if (request[0] == TBProbe.TB_RESULT_STALEMATE) {
+                    return 0;
+                }
+            } else if (request.length > 1){
+                if (request[0] == TBProbe.TB_LOSS) {
+                    return -999999999 - depth ;
+                } else if (request[0] == TBProbe.TB_DRAW || request[0] == TBProbe.TB_BLESSED_LOSS || request[0] == TBProbe.TB_CURSED_WIN) {
+                    return 0;
+                } else if (request[0] == TBProbe.TB_WIN) {
+                    return 999999999 + depth;
+                }
+            }
+        }
+
         int pvIndex = totalDepth - depth;
         pvLength[pvIndex] = pvIndex;
 
@@ -218,25 +241,6 @@ public class Engine {
         if (board.halfMoveClock >= 100) {
             return 0;
         }
-
-        /*if (board.endGame) {
-            long[] result = Tablebase.getEval(board);
-            if (result.length != 0) {
-                eval = result[1];
-                if (eval >= beta) {
-                    return beta;
-                }
-                if (eval > alpha) {
-                    alpha = eval;
-                    pvTable[pvIndex][pvIndex] = result[0];
-                    for (int j = pvIndex + 1; j < pvLength[pvIndex + 1]; j++) {
-                        pvTable[pvIndex][j] = pvTable[pvIndex + 1][j];
-                    }
-                    pvLength[pvIndex] = pvLength[pvIndex + 1];
-                }
-                return alpha;
-            }
-        }*/ //Api too slow
 
         Board nextBoard;
         boolean foundPV = false;
