@@ -4,6 +4,9 @@ public class Engine {
     final static int nullMoveReduction = 2;
     static boolean inNullMove;
 
+    final static int fullDepthMoves = 4;
+    final static int reductionLimit = 3;
+
     //static Ponder ponder;
     static int maxDepth = 30;
     static boolean tbMove;
@@ -76,36 +79,6 @@ public class Engine {
         return bestBoard;
     }
 
-    public static Board engineMove(int depth, Board board) {
-        Board bestBoard = null, temp;
-        thinkTime = Integer.MAX_VALUE;
-        startTime = System.currentTimeMillis();
-
-        for (int i = 1; i <= depth; i++) {
-            inNullMove = false;
-
-            totalDepth = i;
-            nodes = 0;
-
-            temp = negaMax(board, i);
-            if (temp != null) {
-                bestBoard = temp;
-                previousPV = pvTable.clone();
-                pvTable = new long[maxDepth][maxDepth];
-
-                endTime = System.currentTimeMillis();
-                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
-            } else {
-                break;
-            }
-            if (MoveGeneration.getMoves(bestBoard).count == 0 && (bestBoard.fKing & bestBoard.eAttackMask) != 0) {
-                break;
-            }
-        }
-        System.out.println();
-        return bestBoard;
-    }
-
     private static Board negaMax(Board board, int depth) {
         Repetition.refreshTables(); //reset tree table to actual positions
 
@@ -149,14 +122,23 @@ public class Engine {
             if (repetition) {
                 eval = 0;
             } else {
-                if (foundPV) {
-                    eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha);
-                    if ((eval > alpha) && (eval < beta)) { //if move searched after pv found is better than pv then have to full search move
-                        eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
-                    }
-                } else {
+
+                if (i == 0 || !foundPV)
                     eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
+                else {
+                    if (i >= fullDepthMoves && depth >= reductionLimit && ok_to_reduce()) {
+                        eval = -negaMax(nextBoard, depth - 2, -alpha - 1, -alpha);
+                    } else {
+                        eval = alpha + 1;
+                    }
+                    if (eval > alpha) {
+                        eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha);
+                        if (eval > alpha && eval < beta) {
+                            eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
+                        }
+                    }
                 }
+
             }
             Repetition.removeFromHistory(nextBoard.zobristKey);
 
@@ -223,17 +205,13 @@ public class Engine {
             int mate = MoveGeneration.mateCheck(board);
             if (mate == 0) {
                 eval = quiescence(board, alpha, beta);
-                //TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact); //this is breaking something
                 return eval;
             } else if (mate == 1) {
-                //TTable.writeValue(board.zobristKey, depth, -9999999 - depth, TTable.flagExact);
                 return -9999999 - depth;
             } else {
-                //TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
                 return 0;
             }
         }
-
 
         MoveList moveList = MoveGeneration.getMoves(board);
         if (moveList.count == 0) {
@@ -251,7 +229,11 @@ public class Engine {
 
         Board nextBoard;
 
-        if (!inNullMove && pvIndex >= 2 && (((board.eKing | board.ePawn) & ~board.eOccupied) != 0) && depth >= nullMoveReduction + 1 && (board.eKing & board.fAttackMask) == 0) {
+        if (!inNullMove && pvIndex >= 2 &&
+                (((board.eKing | board.ePawn) & ~board.eOccupied) != 0) &&
+                depth >= nullMoveReduction + 1 &&
+                (board.eKing & board.fAttackMask) == 0) {
+
             inNullMove = true;
             nextBoard = new Board(board);
             nextBoard.makeNullMove();
@@ -278,14 +260,23 @@ public class Engine {
             if (repetition) {
                 eval = 0;
             } else {
-                if (foundPV) {
-                    eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha);
-                    if ((eval > alpha) && (eval < beta)) { //if move searched after pv found is better than pv then have to full search move
-                        eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
-                    }
-                } else {
+
+                if (i == 0 || !foundPV)
                     eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
+                else {
+                    if (i >= fullDepthMoves && depth >= reductionLimit && ok_to_reduce()) {
+                        eval = -negaMax(nextBoard, depth - 2, -alpha - 1, -alpha);
+                    } else {
+                        eval = alpha + 1;
+                    }
+                    if (eval > alpha) {
+                        eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha);
+                        if (eval > alpha && eval < beta) {
+                            eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
+                        }
+                    }
                 }
+
             }
             Repetition.removeFromHistory(nextBoard.zobristKey); //once all searches completed with added repetition count, can remove the count
 
@@ -356,6 +347,42 @@ public class Engine {
             }
         }
         return alpha;
+    }
+
+
+    private static boolean ok_to_reduce() {
+        return true;
+    }
+
+
+    public static Board engineMove(int depth, Board board) {
+        Board bestBoard = null, temp;
+        thinkTime = Integer.MAX_VALUE;
+        startTime = System.currentTimeMillis();
+
+        for (int i = 1; i <= depth; i++) {
+            inNullMove = false;
+
+            totalDepth = i;
+            nodes = 0;
+
+            temp = negaMax(board, i);
+            if (temp != null) {
+                bestBoard = temp;
+                previousPV = pvTable.clone();
+                pvTable = new long[maxDepth][maxDepth];
+
+                endTime = System.currentTimeMillis();
+                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
+            } else {
+                break;
+            }
+            if (MoveGeneration.getMoves(bestBoard).count == 0 && (bestBoard.fKing & bestBoard.eAttackMask) != 0) {
+                break;
+            }
+        }
+        System.out.println();
+        return bestBoard;
     }
 
     public static SearchNode getSearchNodes(Board board, int depth) {
