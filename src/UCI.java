@@ -50,7 +50,7 @@ public class UCI {
             Main.tbPath = commands[5];
             Tablebase.init(Main.tbPath);
         } else if (commands[2].equalsIgnoreCase("hashtable")) {
-            Main.ttCapacity = Math.max(Math.min(Integer.parseInt(commands[7]), 10000), 16)*1000000/72;
+            Main.ttCapacity = Math.max(Math.min(Integer.parseInt(commands[7]), 10000), 16) * 1000000 / 72;
             TTable.init(Main.ttCapacity);
         }
     }
@@ -119,7 +119,7 @@ public class UCI {
                 movetime = Math.max(baseMovetime / 50, 250);
             }
             if (commands[i].equals("movestogo")) {
-                movetime = Math.max(remainingTime / Integer.parseInt(commands[i + 1]), 250);
+                movetime =remainingTime / Integer.parseInt(commands[i + 1]);
                 break;
             }
             if (commands[i].equals(inc)) {

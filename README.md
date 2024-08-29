@@ -11,6 +11,7 @@ Has 2 options, a custom GUI and using the UCI (Universal Chess Interface)
 - Enable or disable NNUE Evaluation
 - Clear transposition tables
 - Set the path to the tablebase directory 
+- Set the size of transposition tables
 
 
 ### Move Generation:
@@ -21,10 +22,16 @@ Has 2 options, a custom GUI and using the UCI (Universal Chess Interface)
 
 ### Search
 - An alpha beta Negamax search is used
-- Move reordering based on attacker and victim values of a move
+- Move reordering based on attacker and victim values of a move 
+- Move reordering based on best move values from the transposition table
+- Move reordering based on killer and history moves
 - The principle variation is collected and used for iterative deepening
 - Killer moves are collected and used to reorder moves
 - Transposition table using Zobrist hashing
+- Null move pruning
+- Late move reduction paired with principle variation pruning
+- Razoring
+- Reverse futility pruning
 - Quiescence search 
 - Syzygy tablebase for endgames
 
@@ -44,6 +51,28 @@ A minimum of Java Runtime Environment version 21 is required.
 Download the latest GUI or UCI release and play some chess!
 
 ## Changelog
+#### 11.0 - 29th August 2024
+- #### UCI
+  - Added propper time management calculations
+  - Added options for nnue, transposition table size, tablebase path, and clearing tables
+
+- #### Aspiration windows
+  - Tried implementing fixed aspiration windows to no avail
+  - Tried exponentially increasing aspiration windows again to no avail
+
+- #### Move reordering revamp
+  - Implemented killer and history moves to use for reordering
+  - Added best move logging into the transposition table to use for reordering
+
+- #### Transposition table
+  - Added fixed size tables with a first in first out clearing system
+  - Fixed a miscalculation that made initial size of the table to 4.6 GB instead of 256 MB 
+
+- #### Search pruning
+  - Added null move pruning
+  - Added late move reductions to the principle variation search
+  - Added razoring
+  - Added reverse futility pruning
 
 #### 10.0 - 1st July 2024
 - Implemented UCI option and a new menu for the custom GUI. Figured out how to compile and create executables as well!

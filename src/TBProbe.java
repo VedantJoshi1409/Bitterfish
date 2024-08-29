@@ -50,10 +50,9 @@ public class TBProbe {
     private static final String USER_AGENT = "Mozilla/5.0";
     private static final String base = "https://tablebase.lichess.ovh/standard/mainline?fen=";
 
+    private static boolean initalized = false;
+
     public static long[] getHttpEval(Board board) {
-        if (!Main.tablebase) {
-            return new long[]{};
-        }
         StringBuffer response = new StringBuffer();
         try {
             String fen = board.boardToFen();
@@ -118,7 +117,16 @@ public class TBProbe {
         return new long[]{longMove, eval};
     }
 
+    public static void init(String path) {
+        Tablebase.init(path);
+        initalized = true;
+    }
+
     public static int[] getEval(Board board) {
+        if (!initalized) {
+            return new int[] {(int) TB_RESULT_FAILED};
+        }
+
         long value = getValue(board);
 
         if (value == TB_RESULT_FAILED || value == TB_RESULT_STALEMATE || value == TB_RESULT_CHECKMATE) {

@@ -1,19 +1,18 @@
 import NNUEBridge.NNUEBridge;
-import TB.Tablebase;
 
 import java.util.Scanner;
 
 public class Main {
+    static boolean nnue;
     static String bigNet = "nn-b1a57edbea57.nnue";
     static String smallNet = "nn-baff1ede1f90.nnue";
     static String tbPath = "dependencies/tablebase";
     static int ttCapacity = 256000000/72;
+    static boolean uci = false;
+
     static boolean flip;
     static boolean player;
-    static boolean tablebase;
-    static boolean nnue;
     static int timeLimit;
-    static boolean uci = false;
 
     public static void main(String[] args) {
 //        nnue = true;
@@ -37,62 +36,66 @@ public class Main {
         while (true) {
             String lineIn = sc.nextLine();
 
-            if (lineIn.equals("uci")) {
-                uci = true;
-                nnue = true;
-                if (firstLoop) {
-                    init();
-                    firstLoop = false;
-                }
-                System.out.println("id name Bitterfish");
-                System.out.println("id author Vedant Joshi");
-                System.out.println();
-                System.out.println("option name NNUE Evaluation type check default true");
-                System.out.println("option name Clear Tables type button");
-                System.out.println("option name Tablebase Path type string default dependencies/tablebase");
-                System.out.println("option name Hashtable Size in MB type spin default 256 min 16 max 10000");
-                System.out.println();
-                System.out.println("uciok");
-                UCI uci = new UCI();
-                uci.loop();
-            } else if (lineIn.equals("gui")) {
-                if (firstLoop) {
-                    init();
-                    firstLoop = false;
-                }
-
-                Menu menu = new Menu();
-                while (!menu.startGame) {
-                    try {
-                        Thread.sleep(100);
-                    } catch (InterruptedException e) {
+            switch (lineIn) {
+                case "uci" -> {
+                    uci = true;
+                    nnue = true;
+                    if (firstLoop) {
+                        init();
+                        firstLoop = false;
                     }
+                    System.out.println("id name Bitterfish");
+                    System.out.println("id author Vedant Joshi");
+                    System.out.println();
+                    System.out.println("option name NNUE Evaluation type check default true");
+                    System.out.println("option name Clear Tables type button");
+                    System.out.println("option name Tablebase Path type string default dependencies/tablebase");
+                    System.out.println("option name Hashtable Size in MB type spin default 256 min 16 max 10000");
+                    System.out.println();
+                    System.out.println("uciok");
+                    UCI uci = new UCI();
+                    uci.loop();
                 }
-                menu.dispose();
-                nnue = menu.nnueEnabled;
-                player = menu.player;
-                flip = menu.flip;
-                timeLimit = menu.thinkTimeAmount;
+                case "gui" -> {
+                    if (firstLoop) {
+                        init();
+                        firstLoop = false;
+                    }
+
+                    Menu menu = new Menu();
+                    while (!menu.startGame) {
+                        try {
+                            Thread.sleep(100);
+                        } catch (InterruptedException e) {
+                        }
+                    }
+                    menu.dispose();
+                    nnue = menu.nnueEnabled;
+                    player = menu.player;
+                    flip = menu.flip;
+                    timeLimit = menu.thinkTimeAmount;
 
 
-                init();
-                Board board = new Board(PosConstants.startPos);
-                Gui gui = new Gui(board, menu.scale, flip);
-                play(board, gui, timeLimit, player);
-                gui.dispose();
-                Repetition.clearTables();
-                TTable.clearTables();
+                    init();
+                    Board board = new Board(PosConstants.startPos);
+                    Gui gui = new Gui(board, menu.scale, flip);
+                    play(board, gui, timeLimit, player);
+                    gui.dispose();
+                    Repetition.clearTables();
+                    TTable.clearTables();
 
-            } else if (lineIn.equals("test")) {
-                nnue=true;
-                init();
-                Board board = new Board(PosConstants.startPos);
-                Gui gui = new Gui(board, 1, false);
+                }
+                case "test" -> {
+                    nnue = true;
+                    init();
+                    Board board = new Board(PosConstants.startPos);
+                    Gui gui = new Gui(board, 1, false);
 
-                while (true) {
-                    engineTest(board, gui, 3000);
-                    board = new Board(PosConstants.startPos);
-                    System.out.println(TTable.hashfull());
+                    while (true) {
+                        engineTest(board, gui, 3000);
+                        board = new Board(PosConstants.startPos);
+                        System.out.println(TTable.hashfull());
+                    }
                 }
             }
         }
@@ -178,13 +181,11 @@ public class Main {
     }
 
     static void init() {
-        if (nnue) {
-            NNUEBridge.init(bigNet, smallNet);
-        }
+        NNUEBridge.init(bigNet, smallNet);
         MoveGeneration.initAttack();
         Zobrist.initKeys();
         TTable.init(ttCapacity); //each entry is about 72 bytes
-        Tablebase.init(tbPath);
+        TBProbe.init(tbPath);
     }
 
     private static void speedTest(Board board, int repetitions) {
