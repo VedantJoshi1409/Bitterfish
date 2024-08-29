@@ -68,7 +68,7 @@ public class Ponder extends Thread {
 
         MoveList moveList = MoveGeneration.getMoves(board);
         pvLength[0] = 0;
-        moveList.reorder(board, pvTable[0][0], 0);
+        moveList.reorder(board, pvTable[0][0], 0, 0);
 
         Board bestBoard = null;
         Board nextBoard;
@@ -116,14 +116,14 @@ public class Ponder extends Thread {
             }
         }
         if (!alphaIsARepetition) {
-            TTable.writeValue(board.zobristKey, depth, alpha, hashFlag);
+            TTable.writeValue(board.zobristKey, depth, alpha, hashFlag, 0);
         }
         return bestBoard;
     }
 
     public double negaMax(Board board, int depth, double alpha, double beta) {
         int hashFlag = TTable.flagAlpha;
-        double eval = TTable.getValue(board.zobristKey, depth, alpha, beta);
+        double eval = TTable.getValue(board.zobristKey, depth, alpha, beta).eval;
         if (eval != TTable.noValue) { //if this position is already evaluated with this depth
             return eval;
         }
@@ -158,7 +158,7 @@ public class Ponder extends Thread {
 
         int pvIndex = totalDepth - depth;
         pvLength[pvIndex] = pvIndex;
-        moveList.reorder(board, pvTable[pvIndex][pvIndex], pvIndex);
+        moveList.reorder(board, pvTable[pvIndex][pvIndex], pvIndex, 0);
 
         for (int i = 0; i < moveList.count; i++) {
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
@@ -191,7 +191,7 @@ public class Ponder extends Thread {
 
             if (eval >= beta) {
                 if (!repetition) {
-                    TTable.writeValue(board.zobristKey, depth, beta, TTable.flagBeta);
+                    TTable.writeValue(board.zobristKey, depth, beta, TTable.flagBeta, 0);
                 } //if repetition occurs, this value is not trustworthy
 
                 return beta;
@@ -211,7 +211,7 @@ public class Ponder extends Thread {
             }
         }
         if (!alphaIsARepetition) {
-            TTable.writeValue(board.zobristKey, depth, alpha, hashFlag);
+            TTable.writeValue(board.zobristKey, depth, alpha, hashFlag, 0);
         }
         return alpha;
     }
@@ -227,7 +227,7 @@ public class Ponder extends Thread {
 
         MoveList moveList = MoveGeneration.getMoves(board);
         Board nextBoard;
-        moveList.reorder(board, 0, 0);
+        moveList.reorder(board, 0, 0, 0);
 
         for (int i = 0; i < moveList.count; i++) {
             if (MoveList.getCaptureFlag(moveList.moves[i]) == 1) {

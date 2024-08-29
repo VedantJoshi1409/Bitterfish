@@ -7,6 +7,7 @@ public class Main {
     static String bigNet = "nn-b1a57edbea57.nnue";
     static String smallNet = "nn-baff1ede1f90.nnue";
     static String tbPath = "dependencies/tablebase";
+    static int ttCapacity = 256000000/72;
     static boolean flip;
     static boolean player;
     static boolean tablebase;
@@ -40,7 +41,7 @@ public class Main {
                 uci = true;
                 nnue = true;
                 if (firstLoop) {
-                    preInit();
+                    init();
                     firstLoop = false;
                 }
                 System.out.println("id name Bitterfish");
@@ -49,13 +50,14 @@ public class Main {
                 System.out.println("option name NNUE Evaluation type check default true");
                 System.out.println("option name Clear Tables type button");
                 System.out.println("option name Tablebase Path type string default dependencies/tablebase");
+                System.out.println("option name Hashtable Size in MB type spin default 256 min 16 max 10000");
                 System.out.println();
                 System.out.println("uciok");
                 UCI uci = new UCI();
                 uci.loop();
             } else if (lineIn.equals("gui")) {
                 if (firstLoop) {
-                    preInit();
+                    init();
                     firstLoop = false;
                 }
 
@@ -73,7 +75,7 @@ public class Main {
                 timeLimit = menu.thinkTimeAmount;
 
 
-                preInit();
+                init();
                 Board board = new Board(PosConstants.startPos);
                 Gui gui = new Gui(board, menu.scale, flip);
                 play(board, gui, timeLimit, player);
@@ -83,7 +85,7 @@ public class Main {
 
             } else if (lineIn.equals("test")) {
                 nnue=true;
-                preInit();
+                init();
                 Board board = new Board(PosConstants.startPos);
                 Gui gui = new Gui(board, 1, false);
 
@@ -175,16 +177,13 @@ public class Main {
         }
     }
 
-    static void preInit() {
+    static void init() {
         if (nnue) {
             NNUEBridge.init(bigNet, smallNet);
         }
         MoveGeneration.initAttack();
         Zobrist.initKeys();
-        TTable.init(64000000);
-    }
-
-    static void postInit() {
+        TTable.init(ttCapacity); //each entry is about 72 bytes
         Tablebase.init(tbPath);
     }
 

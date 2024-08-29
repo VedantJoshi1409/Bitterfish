@@ -1,6 +1,9 @@
+import TB.Tablebase;
+
 import java.util.Scanner;
 
 public class UCI {
+
     Scanner sc;
     Board board;
     int baseMovetime = -1;
@@ -45,7 +48,10 @@ public class UCI {
             TTable.clearTables();
         } else if (commands[2].equalsIgnoreCase("tablebase")) {
             Main.tbPath = commands[5];
-            Main.postInit();
+            Tablebase.init(Main.tbPath);
+        } else if (commands[2].equalsIgnoreCase("hashtable")) {
+            Main.ttCapacity = Math.max(Math.min(Integer.parseInt(commands[7]), 10000), 16)*1000000/72;
+            TTable.init(Main.ttCapacity);
         }
     }
 

@@ -94,7 +94,7 @@ public class MoveList {
         count++;
     }
 
-    void reorder(Board board, long pvMove, int ply) {
+    void reorder(Board board, long pvMove, int ply, long bestMove) {
         long[][] moveAndScore = new long[count][2];
         long move;
         int attacker;
@@ -106,36 +106,41 @@ public class MoveList {
             score = 0;
             move = moves[i];
 
-            attacker = getPiece(move);
-            capture = getCaptureFlag(moves[i]);
-            if (capture == 1) {
-                long endSquareBit = 1L << getEndSquare(move);
-
-                if ((board.ePawn & endSquareBit) != 0) {
-                    victim = 0;
-                } else if ((board.eRook & endSquareBit) != 0) {
-                    victim = 1;
-                } else if ((board.eKnight & endSquareBit) != 0) {
-                    victim = 2;
-                } else if ((board.eBishop & endSquareBit) != 0) {
-                    victim = 3;
-                } else if ((board.eQueen & endSquareBit) != 0) {
-                    victim = 4;
-                }
-                score += attackScores[attacker][victim];
-                score += 3000;
+            if (move == bestMove) {
+                score = 4000;
             } else {
-                 if (Engine.killerMoves[0][ply] == move) {
-                     score += 2000;
-                 } else if (Engine.killerMoves[1][ply] == move) {
-                     score += 1000;
-                 } else {
-                     score += Engine.historyMoves[attacker][getEndSquare(move)];
-                 }
+
+                attacker = getPiece(move);
+                capture = getCaptureFlag(moves[i]);
+                if (capture == 1) {
+                    long endSquareBit = 1L << getEndSquare(move);
+
+                    if ((board.ePawn & endSquareBit) != 0) {
+                        victim = 0;
+                    } else if ((board.eRook & endSquareBit) != 0) {
+                        victim = 1;
+                    } else if ((board.eKnight & endSquareBit) != 0) {
+                        victim = 2;
+                    } else if ((board.eBishop & endSquareBit) != 0) {
+                        victim = 3;
+                    } else if ((board.eQueen & endSquareBit) != 0) {
+                        victim = 4;
+                    }
+                    score += attackScores[attacker][victim];
+                    score += 3000;
+                } else {
+                    if (Engine.killerMoves[0][ply] == move) {
+                        score += 2000;
+                    } else if (Engine.killerMoves[1][ply] == move) {
+                        score += 1000;
+                    } else {
+                        score += Engine.historyMoves[attacker][getEndSquare(move)];
+                    }
+                }
             }
 
             if (move == pvMove) {
-                score += 999999999;
+                score += 9999;
             }
 
             moveAndScore[i][0] = move;
