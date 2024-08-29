@@ -125,6 +125,10 @@ public class UCI {
             if (commands[i].equals(inc)) {
                 incBonus = Integer.parseInt(commands[i + 1]);
             }
+            if (commands[i].equals("depth")) {
+                System.out.println(getBestMove(Engine.engineMove(Integer.parseInt(commands[i+1]), board)));
+                return;
+            }
         }
         if (movetime != 250) {
             movetime+=incBonus;

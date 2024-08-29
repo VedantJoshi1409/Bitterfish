@@ -107,7 +107,7 @@ public class MoveList {
             move = moves[i];
 
             if (move == bestMove) {
-                score = 4000;
+                score += 5000;
             } else {
 
                 attacker = getPiece(move);

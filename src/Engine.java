@@ -176,7 +176,6 @@ public class Engine {
     }
 
     private static double negaMax(Board board, int depth, double alpha, double beta) {
-
         if (board.endGame) {
             int[] request = TBProbe.getEval(board);
             if (request.length == 1) {
@@ -195,6 +194,7 @@ public class Engine {
                 }
             }
         }
+
 
         int pvIndex = totalDepth - depth;
         pvLength[pvIndex] = pvIndex;
@@ -238,6 +238,7 @@ public class Engine {
 
         Board nextBoard;
 
+        //NULL MOVE PRUNING
         if (!inNullMove && pvIndex >= 2 &&
                 (((board.eKing | board.ePawn) & ~board.eOccupied) != 0) &&
                 depth >= nullMoveReduction + 1 &&
@@ -255,6 +256,31 @@ public class Engine {
 
         boolean foundPV = false;
         boolean repetition, alphaIsARepetition = false;
+
+
+        //RAZORING
+        if ((beta - alpha) <= 1 && (board.eKing & board.fAttackMask) == 0 && depth <= 2) {
+            nodes++;
+            eval = Evaluation.evaluation(board) + 125;
+            double newEval;
+
+            if (eval < beta) {
+                if (depth == 1) {
+                    newEval = quiescence(board, alpha, beta);
+                    return Math.max(newEval, eval);
+                }
+            }
+
+            eval += 175;
+
+            if (eval < beta) {
+                newEval = quiescence(board, alpha, beta);
+                if (newEval < beta) {
+                    return Math.max(newEval, eval);
+                }
+            }
+            nodes--;
+        }
 
         moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex, bestMove);
         for (int i = 0; i < moveList.count; i++) {
@@ -300,7 +326,7 @@ public class Engine {
                 }
 
                 if (!repetition) {
-                    TTable.writeValue(board.zobristKey, depth, beta, TTable.flagBeta, bestMove);
+                    TTable.writeValue(board.zobristKey, depth, beta, TTable.flagBeta, moveList.moves[i]);
                 } //if repetition occurs, this value is not trustworthy
 
                 return beta;
@@ -358,12 +384,6 @@ public class Engine {
         }
         return alpha;
     }
-
-
-
-
-
-
 
 
     public static Board engineMove(int depth, Board board) {

@@ -42,6 +42,7 @@ public class TTable {
                     hashEntry.depth = depth;
                     hashEntry.flag = flag;
                     hashEntry.value = value;
+                    hashEntry.bestMove = bestMove;
                 }
             } else {
                 hashEntry = new HashEntry(key, depth, flag, value, bestMove);
