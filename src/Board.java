@@ -97,7 +97,6 @@ public class Board {
         this.mateFlag = board.mateFlag;
         this.capturingPiece = board.capturingPiece;
         this.victimPiece = board.victimPiece;
-        this.enemyKingInCheck = board.enemyKingInCheck;
         this.castleState = board.castleState;
         this.wSMoved = board.wSMoved;
         this.wLMoved = board.wLMoved;
@@ -544,6 +543,7 @@ public class Board {
             zobristKey ^= Zobrist.castleKeys[(int) castleRights];
         }
 
+        enemyKingInCheck = (eKing&fAttackMask) == 1;
         occupied = fOccupied | eOccupied;
     }
 

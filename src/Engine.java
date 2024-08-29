@@ -239,11 +239,7 @@ public class Engine {
         Board nextBoard;
 
         //NULL MOVE PRUNING
-        if (!inNullMove && pvIndex >= 2 &&
-                (((board.eKing | board.ePawn) & ~board.eOccupied) != 0) &&
-                depth >= nullMoveReduction + 1 &&
-                (board.eKing & board.fAttackMask) == 0) {
-
+        if (!inNullMove && depth >= nullMoveReduction + 1 && pvIndex >= 2 && !board.enemyKingInCheck && (((board.eKing | board.ePawn) & ~board.eOccupied) != 0)) {
             inNullMove = true;
             nextBoard = new Board(board);
             nextBoard.makeNullMove();
@@ -254,14 +250,25 @@ public class Engine {
             }
         }
 
-        boolean foundPV = false;
-        boolean repetition, alphaIsARepetition = false;
+        double staticEval = nonEval;
 
+        //REVERSE FUTILITY PRUNING
+        if (depth < 3 && (beta - alpha) <= 1 && !board.enemyKingInCheck && Math.abs(beta - 1) > Integer.MIN_VALUE + 100) {
+            staticEval = Evaluation.evaluation(board);
+            int evalMargin = 120 * depth;
+            if (staticEval - evalMargin >= beta) {
+                return staticEval - evalMargin;
+            }
+        }
 
         //RAZORING
-        if ((beta - alpha) <= 1 && (board.eKing & board.fAttackMask) == 0 && depth <= 2) {
+        if (depth <= 2 && (beta - alpha) <= 1 && !board.enemyKingInCheck) {
             nodes++;
-            eval = Evaluation.evaluation(board) + 125;
+            if (staticEval != nonEval) {
+                eval = staticEval + 125;
+            } else {
+                eval = Evaluation.evaluation(board) + 125;
+            }
             double newEval;
 
             if (eval < beta) {
@@ -281,6 +288,9 @@ public class Engine {
             }
             nodes--;
         }
+
+        boolean foundPV = false;
+        boolean repetition, alphaIsARepetition = false;
 
         moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex, bestMove);
         for (int i = 0; i < moveList.count; i++) {
