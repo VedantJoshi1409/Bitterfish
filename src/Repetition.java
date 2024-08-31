@@ -4,41 +4,37 @@ import java.util.Objects;
 public class Repetition {
     public static int positionSize = 6000;
     public static int treeSize = 1000000;
-    public static Hashtable<Integer, Integer> positionHistory = new Hashtable<>(positionSize);
-    public static Hashtable<Integer, Integer> treeHistory = new Hashtable<>(treeSize);
+    public static Hashtable<Long, Integer> positionHistory = new Hashtable<>(positionSize);
+    public static Hashtable<Long, Integer> treeHistory = new Hashtable<>(treeSize);
     public static boolean historyFlag = false, treeFlag = true;
 
     public static boolean addToHistory(long key, boolean flag) {
-        int index;
         if (flag) {
-            index = (int) (key%treeSize);
-            Integer oldAmount = treeHistory.get(index);
+            Integer oldAmount = treeHistory.get(key);
             if (oldAmount != null) {
                 oldAmount++;
-                treeHistory.put(index, oldAmount);
-                return oldAmount >= 3;
+                treeHistory.put(key, oldAmount);
+                return oldAmount >= 2;
             } else {
-                treeHistory.put(index, 1);
+                treeHistory.put(key, 1);
             }
         } else {
-            index = (int) (key%treeSize);
-            Integer oldAmount = positionHistory.get(index);
+            Integer oldAmount = positionHistory.get(key);
             if (oldAmount != null) {
                 oldAmount++;
-                positionHistory.put(index, oldAmount);
-                return oldAmount >= 3;
+                positionHistory.put(key, oldAmount);
+                return oldAmount >= 2;
             } else {
-                positionHistory.put(index, 1);
+                positionHistory.put(key, 1);
             }
         }
         return false;
     }
 
     public static void removeFromHistory(long key) {
-        int index = (int)(key%treeSize);
-        Integer oldAmount = treeHistory.get(index);
+        Integer oldAmount = treeHistory.get(key);
         if (oldAmount != null) {
-            treeHistory.put(index, oldAmount - 1);
+            treeHistory.put(key, oldAmount - 1);
         }
     }
 
@@ -49,9 +45,9 @@ public class Repetition {
 
     public static int getRepetitionAmount(long key, boolean flag) {
         if (flag) {
-            return Objects.requireNonNullElse(treeHistory.get((int) (key % treeSize)), 0);
+            return Objects.requireNonNullElse(treeHistory.get(key), 0);
         } else {
-            return Objects.requireNonNullElse(positionHistory.get((int) (key % treeSize)), 0);
+            return Objects.requireNonNullElse(positionHistory.get(key), 0);
         }
     }
 

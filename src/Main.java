@@ -16,9 +16,9 @@ public class Main {
 
     public static void main(String[] args) {
 //        nnue = true;
-//        preInit();
-//        postInit();
-//
+//        init();
+//        uci = true;
+
 //        Board b = new Board("6k1/1p3rp1/p1n1Q2p/8/4p3/P4qP1/1PP2P2/1K6 w - - 0 36");
 //        Engine.engineMove(8, b);
 
@@ -98,6 +98,7 @@ public class Main {
                     }
                 }
             }
+            break;
         }
         /*Board board = new Board(PosConstants.startPos);
         Gui gui = new Gui(board, 1, false);

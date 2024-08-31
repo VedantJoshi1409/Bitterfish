@@ -3,7 +3,6 @@ import TB.Tablebase;
 import java.util.Scanner;
 
 public class UCI {
-
     Scanner sc;
     Board board;
     int baseMovetime = -1;
@@ -35,9 +34,38 @@ public class UCI {
                     stop();
                     break;
             }
-
             lineIn = sc.nextLine();
         }
+
+        /*newGame();
+        long wtime = 1000;
+        long winc = 100;
+        String[] blocks = testGame.split(" ");
+        for (int i = 8; i < blocks.length; i+=2) {
+            String temp = "";
+            for (int j = 0; j <= i; j++) {
+                temp = temp.concat(blocks[j] +  " ");
+            }
+            long start = System.currentTimeMillis();
+            position(temp);
+
+
+            if (i == 200) {
+                GameState state = new GameState(board);
+//                state.saveState("");
+//                System.out.println("STATE SAVED");
+            }
+
+            go(String.format("go wtime %d winc %d", wtime, winc));
+            long end = System.currentTimeMillis();
+            wtime -= (end - start);
+            wtime += winc;
+        }
+        GameState s = new GameState();
+        s.loadZobrist("");
+        s.loadTransposition("");
+        position(testGame);
+        go("go depth 2");*/
     }
 
     void setoption(String command) {
@@ -67,7 +95,7 @@ public class UCI {
         if (pos.equals("startpos")) {
             board = new Board(PosConstants.startPos);
         } else {
-            board = new Board(command.substring(9));
+            board = new Board(command.substring(13));
         }
 
         Repetition.addToHistory(board.zobristKey, Repetition.historyFlag);
@@ -84,9 +112,14 @@ public class UCI {
                 nextBoard = new Board(nextBoard);
                 nextBoard.makeMove(moveList.getMoveFromString(moves[i]));
                 Repetition.addToHistory(nextBoard.zobristKey, Repetition.historyFlag);
+                /*System.out.println("Move " + (i/2+1) + ": " + moves[i] + ": " + Repetition.getRepetitionAmount(nextBoard.zobristKey, Repetition.historyFlag) + " " + nextBoard.zobristKey + " " + i);
+                if (i == 192 || i == 196) {
+                    System.out.println(nextBoard);
+                }*/
             }
 
             board = nextBoard;
+            System.out.println(board);
         }
 //        System.out.println(board);
     }
@@ -137,6 +170,9 @@ public class UCI {
         }
 
         Board temp = Engine.engineMove(board, movetime);
+        /*if (Repetition.getRepetitionAmount(temp.zobristKey, Repetition.historyFlag) > 0) {
+            TTable.clearTables();
+        }*/
         System.out.println(getBestMove(temp));
     }
 

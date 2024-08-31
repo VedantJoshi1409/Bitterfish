@@ -63,9 +63,6 @@ public class Engine {
                 endTime = System.currentTimeMillis();
                 if (Main.uci) {
                     System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime - startTime), MoveList.toStringPvUCI(previousPV), (int) evaluation, (int) TTable.hashfull());
-//                    System.out.println(TTable.memoryUsage());
-                } else {
-                    System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
                 }
             } else {
                 break;
@@ -257,13 +254,13 @@ public class Engine {
             staticEval = Evaluation.evaluation(board);
             int evalMargin = 120 * depth;
             if (staticEval - evalMargin >= beta) {
+                nodes++;
                 return staticEval - evalMargin;
             }
         }
 
         //RAZORING
         if (depth <= 2 && (beta - alpha) <= 1 && !board.enemyKingInCheck) {
-            nodes++;
             if (staticEval != nonEval) {
                 eval = staticEval + 125;
             } else {
@@ -273,6 +270,7 @@ public class Engine {
 
             if (eval < beta) {
                 if (depth == 1) {
+                    nodes++;
                     newEval = quiescence(board, alpha, beta);
                     return Math.max(newEval, eval);
                 }
@@ -283,10 +281,10 @@ public class Engine {
             if (eval < beta) {
                 newEval = quiescence(board, alpha, beta);
                 if (newEval < beta) {
+                    nodes++;
                     return Math.max(newEval, eval);
                 }
             }
-            nodes--;
         }
 
         boolean foundPV = false;
@@ -323,7 +321,7 @@ public class Engine {
                 }
 
             }
-            Repetition.removeFromHistory(nextBoard.zobristKey); //once all searches completed with added repetition count, can remove the count
+            Repetition.removeFromHistory(nextBoard.zobristKey);
 
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
                 return nonEval;
@@ -414,7 +412,9 @@ public class Engine {
                 pvTable = new long[maxDepth][maxDepth];
 
                 endTime = System.currentTimeMillis();
-                System.out.printf("Depth: %-2d Time: %-11s Nodes: %,-11d PV: %s\n", i, (endTime - startTime + "ms"), nodes, MoveList.toStringPv(previousPV));
+                if (Main.uci) {
+                    System.out.printf("info depth %d nodes %d time %d pv %s score cp %d hashfull %d\n", i, nodes, (endTime - startTime), MoveList.toStringPvUCI(previousPV), (int) evaluation, (int) TTable.hashfull());
+                }
             } else {
                 break;
             }
@@ -453,29 +453,48 @@ public class Engine {
     }
 
     private static double negaMax(Board board, int depth, double alpha, double beta, SearchNode parentNode) {
+        if (board.endGame) {
+            int[] request = TBProbe.getEval(board);
+            if (request.length == 1) {
+                if (request[0] == TBProbe.TB_RESULT_CHECKMATE) {
+                    return -9999999 - depth;
+                } else if (request[0] == TBProbe.TB_RESULT_STALEMATE) {
+                    return 0;
+                }
+            } else if (request.length > 1) {
+                if (request[0] == TBProbe.TB_LOSS) {
+                    return -9999999 - depth;
+                } else if (request[0] == TBProbe.TB_DRAW || request[0] == TBProbe.TB_BLESSED_LOSS || request[0] == TBProbe.TB_CURSED_WIN) {
+                    return 0;
+                } else if (request[0] == TBProbe.TB_WIN) {
+                    return 9999999 + depth;
+                }
+            }
+        }
+
+
         int pvIndex = totalDepth - depth;
         pvLength[pvIndex] = pvIndex;
 
         int hashFlag = TTable.flagAlpha;
         Pair pair = TTable.getValue(board.zobristKey, depth, alpha, beta);
         double eval = pair.eval;
-        /*if (eval != TTable.noValue) { //if this position is already evaluated with this depth
+        long bestMove = pair.bestMove;
+
+        if (eval != TTable.noValue) { //if this position is already evaluated with this depth
             nodes++;
             return eval;
-        }*/
+        }
 
-        if (depth == 0) {
+        if (depth <= 0) {
             nodes++;
             int mate = MoveGeneration.mateCheck(board);
             if (mate == 0) {
                 eval = quiescence(board, alpha, beta, parentNode);
-                //TTable.writeValue(board.zobristKey, depth, eval, TTable.flagExact); //this is breaking something
                 return eval;
             } else if (mate == 1) {
-                //TTable.writeValue(board.zobristKey, depth, -9999999 - depth, TTable.flagExact);
                 return -9999999 - depth;
             } else {
-                //TTable.writeValue(board.zobristKey, depth, 0, TTable.flagExact);
                 return 0;
             }
         }
@@ -490,12 +509,67 @@ public class Engine {
             }
         }
 
+        if (board.halfMoveClock >= 100) {
+            return 0;
+        }
+
         Board nextBoard;
         SearchNode currentNode;
-        //boolean foundPV = false;
+        //NULL MOVE PRUNING
+        if (!inNullMove && depth >= nullMoveReduction + 1 && pvIndex >= 2 && !board.enemyKingInCheck && (((board.eKing | board.ePawn) & ~board.eOccupied) != 0)) {
+            inNullMove = true;
+            nextBoard = new Board(board);
+            nextBoard.makeNullMove();
+            eval = -negaMax(nextBoard, depth - 1 - nullMoveReduction, -beta, -beta + 1);
+            inNullMove = false;
+            if (eval >= beta) {
+                return beta;
+            }
+        }
+
+        double staticEval = nonEval;
+
+        //REVERSE FUTILITY PRUNING
+        if (depth < 3 && (beta - alpha) <= 1 && !board.enemyKingInCheck && Math.abs(beta - 1) > Integer.MIN_VALUE + 100) {
+            staticEval = Evaluation.evaluation(board);
+            int evalMargin = 120 * depth;
+            if (staticEval - evalMargin >= beta) {
+                return staticEval - evalMargin;
+            }
+        }
+
+        //RAZORING
+        if (depth <= 2 && (beta - alpha) <= 1 && !board.enemyKingInCheck) {
+            nodes++;
+            if (staticEval != nonEval) {
+                eval = staticEval + 125;
+            } else {
+                eval = Evaluation.evaluation(board) + 125;
+            }
+            double newEval;
+
+            if (eval < beta) {
+                if (depth == 1) {
+                    newEval = quiescence(board, alpha, beta);
+                    return Math.max(newEval, eval);
+                }
+            }
+
+            eval += 175;
+
+            if (eval < beta) {
+                newEval = quiescence(board, alpha, beta);
+                if (newEval < beta) {
+                    return Math.max(newEval, eval);
+                }
+            }
+            nodes--;
+        }
+
+        boolean foundPV = false;
         boolean repetition, alphaIsARepetition = false;
 
-        moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex, 0);
+        moveList.reorder(board, previousPV[pvIndex][pvIndex], pvIndex, bestMove);
         for (int i = 0; i < moveList.count; i++) {
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
                 return nonEval;
@@ -505,48 +579,63 @@ public class Engine {
             nextBoard.makeMove(moveList.moves[i]);
             currentNode = new SearchNode(nextBoard);
 
-
-            /*if (foundPV) {
-                eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha);
-                if ((eval > alpha) && (eval < beta)) { //if move searched after pv found is better than pv then have to full search move
-                    eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
-                }
-            } else {
-                eval = -negaMax(nextBoard, depth - 1, -beta, -alpha);
-            }*/
             repetition = Repetition.addToHistory(nextBoard.zobristKey, Repetition.treeFlag);
             if (repetition) {
                 eval = 0;
             } else {
-                eval = -negaMax(nextBoard, depth - 1, -beta, -alpha, currentNode);
+
+                if (i == 0 || !foundPV)
+                    eval = -negaMax(nextBoard, depth - 1, -beta, -alpha, currentNode);
+                else {
+                    if (i >= fullDepthMoves && depth >= reductionLimit) {
+                        eval = -negaMax(nextBoard, depth - 2, -alpha - 1, -alpha, currentNode);
+                    } else {
+                        eval = alpha + 1;
+                    }
+                    if (eval > alpha) {
+                        eval = -negaMax(nextBoard, depth - 1, -alpha - 1, -alpha, currentNode);
+                        if (eval > alpha && eval < beta) {
+                            eval = -negaMax(nextBoard, depth - 1, -beta, -alpha, currentNode);
+                        }
+                    }
+                }
+
             }
             Repetition.removeFromHistory(nextBoard.zobristKey); //once all searches completed with added repetition count, can remove the count
             currentNode.eval = eval;
-
             if (System.currentTimeMillis() - startTime > thinkTime) { //if time limit reached
                 return nonEval;
             }
 
             if (eval >= beta) {
-                if (!repetition) {
-                    TTable.writeValue(board.zobristKey, depth, beta, TTable.flagBeta, 0);
-                } //if repetition occurs, this value is not trustworthy
+                if (MoveList.getCaptureFlag(moveList.moves[i]) == 0) {
+                    killerMoves[1][pvIndex] = killerMoves[0][pvIndex];
+                    killerMoves[0][pvIndex] = moveList.moves[i];
+                }
                 currentNode.flag = SearchNode.AboveBeta;
                 parentNode.addChild(currentNode);
+                if (!repetition) {
+                    TTable.writeValue(board.zobristKey, depth, beta, TTable.flagBeta, moveList.moves[i]);
+                } //if repetition occurs, this value is not trustworthy
+
                 return beta;
             }
             if (eval > alpha) {
+                bestMove = moveList.moves[i];
+                if (MoveList.getCaptureFlag(moveList.moves[i]) == 0) {
+                    historyMoves[MoveList.getPiece(moveList.moves[i])][MoveList.getEndSquare(moveList.moves[i])] = pvIndex;
+                }
+
                 hashFlag = TTable.flagExact;
                 alpha = eval;
-                //foundPV = true;
-                alphaIsARepetition = repetition; //if eval is 0 because of repetition and alpha < 0, alpha cannot be trusted
+                foundPV = true;
 
+                alphaIsARepetition = repetition; //if eval is 0 because of repetition and alpha < 0, alpha cannot be trusted
                 pvTable[pvIndex][pvIndex] = moveList.moves[i];
                 for (int j = pvIndex + 1; j < pvLength[pvIndex + 1]; j++) {
                     pvTable[pvIndex][j] = pvTable[pvIndex + 1][j];
                 }
                 pvLength[pvIndex] = pvLength[pvIndex + 1];
-
                 currentNode.flag = SearchNode.NewAlpha;
                 parentNode.addChild(currentNode);
             } else {
@@ -555,7 +644,7 @@ public class Engine {
             }
         }
         if (!alphaIsARepetition) {
-            TTable.writeValue(board.zobristKey, depth, alpha, hashFlag, 0);
+            TTable.writeValue(board.zobristKey, depth, alpha, hashFlag, bestMove);
         }
         return alpha;
     }
