@@ -152,21 +152,21 @@ public class UCI {
                 movetime = Math.max(baseMovetime / 50, 250);
             }
             if (commands[i].equals("movestogo")) {
-                movetime =remainingTime / Integer.parseInt(commands[i + 1]);
+                movetime = remainingTime / Integer.parseInt(commands[i + 1]);
                 break;
             }
             if (commands[i].equals(inc)) {
                 incBonus = Integer.parseInt(commands[i + 1]);
             }
             if (commands[i].equals("depth")) {
-                System.out.println(getBestMove(Engine.engineMove(Integer.parseInt(commands[i+1]), board)));
+                System.out.println(getBestMove(Engine.engineMove(Integer.parseInt(commands[i + 1]), board)));
                 return;
             }
         }
         if (movetime != 250) {
-            movetime+=incBonus;
+            movetime += incBonus;
         } else {
-            movetime+=incBonus-200;
+            movetime += Math.max(incBonus - 500, 0);
         }
 
         Board temp = Engine.engineMove(board, movetime);
