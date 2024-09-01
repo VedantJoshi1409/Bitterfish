@@ -33,6 +33,9 @@ public class UCI {
                 case "stop":
                     stop();
                     break;
+                case "moves":
+                    legalMoves(lineIn);
+                    break;
             }
             lineIn = sc.nextLine();
         }
@@ -119,7 +122,7 @@ public class UCI {
             }
 
             board = nextBoard;
-            System.out.println(board);
+//            System.out.println(board);
         }
 //        System.out.println(board);
     }
@@ -226,5 +229,21 @@ public class UCI {
 
         Board temp = Engine.engineMove(board, movetime);
         return getBestMove(temp);
+    }
+
+    void legalMoves(String command) {
+        position("position" + command.substring(5));
+        legalMoves(board);
+    }
+
+    void legalMoves(Board board) {
+        Board nextBoard = new Board(board);
+        MoveList moveList = MoveGeneration.getMoves(nextBoard);
+
+        System.out.print("[");
+        for (int i = 0; i < moveList.count; i++) {
+            System.out.print(MoveList.toStringMove(moveList.moves[i]) + (i == moveList.count - 1 ? "" : ","));
+        }
+        System.out.print("]");
     }
 }

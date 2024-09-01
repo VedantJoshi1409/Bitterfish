@@ -6,6 +6,7 @@
 .idea/
 out/
 BitterFish.iml
+META-INF/
 
 #Ignore tablebase
 tablebase/
