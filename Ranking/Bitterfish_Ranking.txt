@@ -1,5 +1,9 @@
 THIS IS AN UNOFFICIAL RANKING
 This tournament was run on my own machine using the CCRL Blitz rules, https://www.computerchess.org.uk/ccrl/404/about.html
+- 5 piece tablebase
+- 256 MB hash table
+- Balsa_v2724.pgn at 5 ply depth for the opening book 
+
 At the time of the tournament, the Elo of the engines are:
 
 Engine:		Elo	+/-
