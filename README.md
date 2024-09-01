@@ -1,9 +1,11 @@
 
+
 # Bitterfish
 
 ## About
 A Chess engine I made for fun\
-Has 2 options, a custom GUI and using the UCI (Universal Chess Interface)
+Has 2 options, a custom GUI and using the UCI (Universal Chess Interface)\
+Approximately [2925 CCRL Elo](https://github.com/VedantJoshi1409/Bitterfish/blob/main/Ranking/Bitterfish_Ranking.txt)
 
 ## Features
 
