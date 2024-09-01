@@ -1,0 +1,103 @@
+THIS IS AN UNOFFICIAL RANKING
+This tournament was run on my own machine using the CCRL Blitz rules, https://www.computerchess.org.uk/ccrl/404/about.html
+At the time of the tournament, the Elo of the engines are:
+
+Engine:		Elo	+/-
+Cheers		2840     16
+Weiawaga	2873	 13
+Daydreamer	2897	 11
+Seawall		2917	 17
+Arcanum		2925	 18
+Cheese		2967	 22
+Pingu		2989 	 29
+
+
+The tournament puts Bitterfish at about 2925 elo
+The pgn and epd files of all 448 games can be found in the same directory as this file
+
+
+Rank Name                          Elo     +/-   Games   Score    Draw 
+   1 Arcanum                        56      54     112   58.0%   32.1% 
+   2 Pingu-4.0.0                    53      50     112   57.6%   40.2% 
+   3 seawall-20231015               37      53     112   55.4%   33.9% 
+   4 BitterfishUCI                  34      57     112   54.9%   22.3% 
+   5 cheese-321-win-pext            22      52     112   53.1%   34.8% 
+   6 Weiawaga-v5.0-x86_64          -63      52     112   41.1%   37.5% 
+   7 cheers-v0.3.1-x86_64          -69      58     112   40.2%   21.4% 
+   8 daydreamer                    -72      58     112   39.7%   22.3% 
+
+SPRT: llr 0 (0.0%), lbound -inf, ubound inf
+448 of 448 games finished.
+
+Player: Arcanum
+   "Draw by 3-fold repetition": 22
+   "Draw by fifty moves rule": 9
+   "Draw by insufficient mating material": 5
+   "Loss: Black mates": 15
+   "Loss: White mates": 14
+   "Win: Black mates": 24
+   "Win: White mates": 23
+Player: BitterfishUCI
+   "Draw by 3-fold repetition": 12
+   "Draw by fifty moves rule": 8
+   "Draw by insufficient mating material": 4
+   "Draw by stalemate": 1
+   "Loss: Black mates": 17
+   "Loss: White mates": 21
+   "Win: Black mates": 24
+   "Win: White mates": 25
+Player: cheers-v0.3.1-x86_64
+   "Draw by 3-fold repetition": 9
+   "Draw by fifty moves rule": 6
+   "Draw by insufficient mating material": 8
+   "Draw by stalemate": 1
+   "Loss: Black mates": 26
+   "Loss: White mates": 29
+   "Win: Black mates": 11
+   "Win: White mates": 22
+Player: cheese-321-win-pext
+   "Draw by 3-fold repetition": 18
+   "Draw by fifty moves rule": 14
+   "Draw by insufficient mating material": 5
+   "Draw by stalemate": 2
+   "Loss: Black mates": 14
+   "Loss: White mates": 19
+   "Win: Black mates": 14
+   "Win: White mates": 26
+Player: daydreamer
+   "Draw by 3-fold repetition": 13
+   "Draw by fifty moves rule": 6
+   "Draw by insufficient mating material": 6
+   "Loss: Black loses on time": 1
+   "Loss: Black mates": 22
+   "Loss: White mates": 32
+   "Win: Black mates": 15
+   "Win: White mates": 17
+Player: Pingu-4.0.0
+   "Draw by 3-fold repetition": 26
+   "Draw by fifty moves rule": 8
+   "Draw by insufficient mating material": 7
+   "Draw by stalemate": 4
+   "Loss: Black mates": 14
+   "Loss: White mates": 11
+   "Win: Black loses on time": 1
+   "Win: Black mates": 17
+   "Win: White mates": 24
+Player: seawall-20231015
+   "Draw by 3-fold repetition": 28
+   "Draw by fifty moves rule": 8
+   "Draw by insufficient mating material": 1
+   "Draw by stalemate": 1
+   "Loss: Black mates": 11
+   "Loss: White mates": 20
+   "Win: Black mates": 22
+   "Win: White mates": 21
+Player: Weiawaga-v5.0-x86_64
+   "Draw by 3-fold repetition": 24
+   "Draw by fifty moves rule": 9
+   "Draw by insufficient mating material": 8
+   "Draw by stalemate": 1
+   "Loss: Black mates": 16
+   "Loss: White mates": 29
+   "Win: Black mates": 8
+   "Win: White mates": 17
