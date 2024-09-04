@@ -98,7 +98,6 @@ public class Main {
                     }
                 }
             }
-            break;
         }
         /*Board board = new Board(PosConstants.startPos);
         Gui gui = new Gui(board, 1, false);

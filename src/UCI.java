@@ -233,17 +233,22 @@ public class UCI {
 
     void legalMoves(String command) {
         position("position" + command.substring(5));
-        legalMoves(board);
+        MoveList moveList = MoveGeneration.getMoves(board);
+
+        System.out.print("movelist ");
+        for (int i = 0; i < moveList.count; i++) {
+            System.out.print(MoveList.toStringMove(moveList.moves[i]) + " ");
+        }
+        System.out.println();
     }
 
     void legalMoves(Board board) {
-        Board nextBoard = new Board(board);
-        MoveList moveList = MoveGeneration.getMoves(nextBoard);
+        MoveList moveList = MoveGeneration.getMoves(board);
 
-        System.out.print("[");
+        System.out.print("movelist ");
         for (int i = 0; i < moveList.count; i++) {
-            System.out.print(MoveList.toStringMove(moveList.moves[i]) + (i == moveList.count - 1 ? "" : ","));
+            System.out.print(MoveList.toStringMove(moveList.moves[i]) + " ");
         }
-        System.out.print("]");
+        System.out.println();
     }
 }
